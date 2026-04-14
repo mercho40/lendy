@@ -174,11 +174,27 @@ Usuario                  Agente 1              Agente 2              Agente 3   
 Todos los agentes comparten:
 - **Runtime:** Bun + SvelteKit
 - **WhatsApp:** Kapso.ai
-- **LLM:** Claude API (Sonnet para velocidad)
+- **LLM:** Claude API (Sonnet 4.6 — $3/$15 por M tokens, ~1-2s por response)
 - **DB:** Postgres en Neon.tech + Drizzle ORM
 - **Pagos:** MercadoPago SDK
+- **Approach:** Raw API + tool_use loop (NO Managed Agents)
 
-La diferencia entre agentes es el **system prompt**, las **tools disponibles**, y el **trigger** (reactivo vs proactivo).
+### Por qué NO Claude Managed Agents
+
+1. **Latencia**: ~2-5s de startup de container. WhatsApp da 10s para responder.
+2. **Costo**: $0.08/session-hour × 4 agentes × N usuarios. Inviable para microcréditos.
+3. **Overkill**: No necesitamos container/bash/filesystem. Nuestros tools son queries a DB y calls a MP.
+4. **Estado duplicado**: Ya tenemos `conversations` en Postgres. Managed Agents maneja su propio estado.
+5. **Proactividad**: Agentes 2 y 4 inician conversaciones. Managed Agents es request-response.
+
+### Motor por Agente
+
+| Agente | Motor | Model | Tools | Trigger |
+|--------|-------|-------|-------|---------|
+| 1. Onboarding | Raw API + tool loop | Sonnet 4.6 | `save_profile`, `request_references` | Reactivo (usuario escribe) |
+| 2. Verificación | Raw API + tool loop | Sonnet 4.6 | `contact_reference`, `save_reference_response`, `calculate_trust_score` | Proactivo (trigger del Agente 1) |
+| 3. Decisión | Single API call (structured output) | Sonnet 4.6 | Ninguno — prompt con datos → JSON con términos | Automático (verificación completa) |
+| 4. Cobranza | Raw API + tool loop | Sonnet 4.6 | `generate_payment_link`, `renegotiate_terms`, `send_reminder` | Proactivo (cron) + Reactivo |
 
 ### Implementación técnica
 

@@ -6,3 +6,4 @@ build
 .env.local
 *.local
 drizzle/meta
+.claude/worktrees
