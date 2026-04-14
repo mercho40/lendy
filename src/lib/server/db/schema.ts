@@ -100,11 +100,15 @@ export const payments = pgTable('payments', {
 	createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
+// Una conversación por número de teléfono (entrada única del webhook).
+// userId xor referenceId identifica a quién le pertenece; el router del webhook
+// selecciona el agente según qué FK esté poblada (y en el caso de user, según state).
 export const conversations = pgTable('conversations', {
 	id: serial('id').primaryKey(),
-	userId: integer('user_id')
-		.references(() => users.id)
-		.notNull()
+	phone: text('phone').unique().notNull(),
+	userId: integer('user_id').references(() => users.id).unique(),
+	referenceId: integer('reference_id')
+		.references(() => references.id, { onDelete: 'cascade' })
 		.unique(),
 	messages: jsonb('messages').default([]).notNull(),
 	state: conversationStateEnum('state').default('onboarding').notNull(),
