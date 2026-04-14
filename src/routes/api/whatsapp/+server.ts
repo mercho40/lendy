@@ -70,7 +70,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (!convo) {
 			[convo] = await db
 				.insert(conversations)
-				.values({ userId: user.id, messages: [], state: 'onboarding' })
+				.values({ userId: user.id, phone: from, messages: [], state: 'onboarding' })
 				.returning();
 		}
 
@@ -81,22 +81,29 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Run the agent (will fail without API key — catch gracefully)
 		let replyText: string;
 		let updatedMsgs: AgentMessage[];
+		let newState: typeof convo.state | undefined;
 
 		try {
-			const result = await runAgent(user.id, msgs);
+			const result = await runAgent(msgs, {
+				userId: user.id,
+				phone: from,
+				state: convo.state
+			});
 			replyText = result.reply;
 			updatedMsgs = result.messages;
+			newState = result.newState;
 		} catch (err) {
 			console.error('[WhatsApp] Agent error:', err);
 			replyText = FALLBACK_MSG;
 			updatedMsgs = msgs; // keep user message in history
 		}
 
-		// Save updated conversation
+		// Save updated conversation (+ possibly new state from tool result)
 		await db
 			.update(conversations)
 			.set({
 				messages: updatedMsgs,
+				...(newState ? { state: newState } : {}),
 				updatedAt: new Date()
 			})
 			.where(eq(conversations.id, convo.id));
@@ -116,7 +123,7 @@ async function handleReferenceMessage(
 	text: string,
 	from: string
 ) {
-	// Find the applicant's conversation
+	// Find or create the applicant's conversation
 	let [convo] = await db
 		.select()
 		.from(conversations)
@@ -124,9 +131,20 @@ async function handleReferenceMessage(
 		.limit(1);
 
 	if (!convo) {
+		// Need the applicant's phone for the new conversation row (required by schema)
+		const [applicant] = await db
+			.select()
+			.from(users)
+			.where(eq(users.id, ref.userId))
+			.limit(1);
 		[convo] = await db
 			.insert(conversations)
-			.values({ userId: ref.userId, messages: [], state: 'onboarding' })
+			.values({
+				userId: ref.userId,
+				phone: applicant?.phone ?? from,
+				messages: [],
+				state: 'verification'
+			})
 			.returning();
 	}
 
@@ -139,11 +157,17 @@ async function handleReferenceMessage(
 
 	let replyText: string;
 	let updatedMsgs: AgentMessage[];
+	let newState: typeof convo.state | undefined;
 
 	try {
-		const result = await runAgent(ref.userId, msgs);
+		const result = await runAgent(msgs, {
+			userId: ref.userId,
+			phone: from, // the reference's phone — handlers look up references by this
+			state: convo.state
+		});
 		replyText = result.reply;
 		updatedMsgs = result.messages;
+		newState = result.newState;
 	} catch (err) {
 		console.error('[WhatsApp] Agent error (reference):', err);
 		replyText = FALLBACK_MSG;
@@ -154,6 +178,7 @@ async function handleReferenceMessage(
 		.update(conversations)
 		.set({
 			messages: updatedMsgs,
+			...(newState ? { state: newState } : {}),
 			updatedAt: new Date()
 		})
 		.where(eq(conversations.id, convo.id));

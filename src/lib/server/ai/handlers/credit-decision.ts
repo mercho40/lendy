@@ -58,28 +58,25 @@ Respondé SOLO con JSON válido, sin markdown:`
 		output_config: {
 			format: {
 				type: 'json_schema',
-				json_schema: {
-					name: 'credit_decision',
-					schema: {
-						type: 'object',
-						properties: {
-							approved: { type: 'boolean' },
-							amount: { type: 'number', description: 'Monto en ARS' },
-							installments: { type: 'number' },
-							interest_rate: { type: 'number', description: 'Basis points (500 = 5%)' },
-							weekly_payment: { type: 'number', description: 'Cuota semanal en ARS' },
-							reason: { type: 'string' }
-						},
-						required: [
-							'approved',
-							'amount',
-							'installments',
-							'interest_rate',
-							'weekly_payment',
-							'reason'
-						],
-						additionalProperties: false
-					}
+				schema: {
+					type: 'object',
+					properties: {
+						approved: { type: 'boolean' },
+						amount: { type: 'number', description: 'Monto en ARS' },
+						installments: { type: 'number' },
+						interest_rate: { type: 'number', description: 'Basis points (500 = 5%)' },
+						weekly_payment: { type: 'number', description: 'Cuota semanal en ARS' },
+						reason: { type: 'string' }
+					},
+					required: [
+						'approved',
+						'amount',
+						'installments',
+						'interest_rate',
+						'weekly_payment',
+						'reason'
+					],
+					additionalProperties: false
 				}
 			}
 		}

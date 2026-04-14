@@ -8,9 +8,11 @@ const MODEL = 'claude-sonnet-4-6';
 
 const client = new Anthropic();
 
+export type AgentMessage = Anthropic.MessageParam;
+
 export interface AgentResult {
 	reply: string;
-	messages: Anthropic.MessageParam[];
+	messages: AgentMessage[];
 	newState?: ConversationState;
 }
 

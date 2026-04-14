@@ -3,12 +3,12 @@ import type { ReferenceResponse } from '../types';
 
 // --- Mock DB and pipeline ---
 
-const mockSelect = vi.fn(() => ({}));
-const mockUpdate = vi.fn(() => ({}));
-const mockFrom = vi.fn(() => ({}));
-const mockWhere = vi.fn(() => ({}));
-const mockLimit = vi.fn(() => ({}));
-const mockSet = vi.fn(() => ({}));
+const mockSelect = vi.fn((..._args: unknown[]) => ({}));
+const mockUpdate = vi.fn((..._args: unknown[]) => ({}));
+const mockFrom = vi.fn((..._args: unknown[]) => ({}));
+const mockWhere = vi.fn((..._args: unknown[]) => ({}));
+const mockLimit = vi.fn((..._args: unknown[]) => ({}));
+const mockSet = vi.fn((..._args: unknown[]) => ({}));
 
 let selectResults: unknown[][] = [];
 let selectCallIndex = 0;
@@ -34,7 +34,7 @@ function resetMocks() {
 	mockUpdate.mockImplementation(() => ({ set: mockSet }));
 }
 
-const mockTriggerCreditDecision = vi.fn(() => Promise.resolve());
+const mockTriggerCreditDecision = vi.fn((..._args: unknown[]) => Promise.resolve());
 
 vi.mock('../../db', () => ({
 	db: {
@@ -177,7 +177,16 @@ describe('Verification Handler', () => {
 		it('updates the reference record with responses and score', async () => {
 			selectResults = [
 				[{ id: 1, userId: 10, phone: '+5491112345678', status: 'contacted', score: null }],
-				[{ id: 1, userId: 10, phone: '+5491112345678', status: 'contacted', score: null }]
+				[{ id: 1, userId: 10, phone: '+5491112345678', status: 'contacted', score: null }],
+				[
+					{
+						id: 10,
+						name: 'Aplicante',
+						phone: '+5491100000000',
+						monthlyIncome: 100000,
+						occupation: 'dev'
+					}
+				]
 			];
 
 			let selectCount = 0;
@@ -187,7 +196,10 @@ describe('Verification Handler', () => {
 					if (selectCount === 1) {
 						return { limit: () => selectResults[0] };
 					}
-					return selectResults[1];
+					if (selectCount === 2) {
+						return selectResults[1];
+					}
+					return { limit: () => selectResults[2] };
 				}
 			}));
 
@@ -213,11 +225,24 @@ describe('Verification Handler', () => {
 							]
 						};
 					}
-					return [
-						{ id: 1, userId: 10, phone: '+5491100000001', status: 'contacted', score: null },
-						{ id: 2, userId: 10, phone: '+5491100000002', status: 'responded', score: 80 },
-						{ id: 3, userId: 10, phone: '+5491100000003', status: 'responded', score: 60 }
-					];
+					if (selectCount === 2) {
+						return [
+							{ id: 1, userId: 10, phone: '+5491100000001', status: 'contacted', score: null },
+							{ id: 2, userId: 10, phone: '+5491100000002', status: 'responded', score: 80 },
+							{ id: 3, userId: 10, phone: '+5491100000003', status: 'responded', score: 60 }
+						];
+					}
+					return {
+						limit: () => [
+							{
+								id: 10,
+								name: 'Aplicante',
+								phone: '+5491100000000',
+								monthlyIncome: 100000,
+								occupation: 'dev'
+							}
+						]
+					};
 				}
 			}));
 
@@ -228,7 +253,11 @@ describe('Verification Handler', () => {
 
 			expect(result.ok).toBe(true);
 			expect(mockTriggerCreditDecision).toHaveBeenCalledTimes(1);
-			expect(mockTriggerCreditDecision).toHaveBeenCalledWith(10, 80);
+			expect(mockTriggerCreditDecision).toHaveBeenCalledWith(
+				10,
+				'+5491100000000',
+				expect.objectContaining({ trustScore: 80 })
+			);
 		});
 
 		it('does NOT trigger credit decision when not all refs responded', async () => {

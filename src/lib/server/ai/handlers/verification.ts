@@ -81,8 +81,29 @@ export async function handleSaveReferenceResponse(
 			.set({ trustScore })
 			.where(eq(users.id, ref.userId));
 
-		// Trigger credit decision
-		await triggerCreditDecision(ref.userId, trustScore);
+		// Build the summary + load applicant data
+		const [applicant] = await db
+			.select()
+			.from(users)
+			.where(eq(users.id, ref.userId))
+			.limit(1);
+
+		const referencesSummary = allRefs
+			.map((r) => {
+				const resp = r.id === ref.id ? input : (r.responses as ReferenceResponse | null);
+				const s = r.id === ref.id ? score : r.score ?? 0;
+				if (!resp) return `- ${r.name ?? r.phone} (sin responder)`;
+				return `- ${r.name ?? r.phone} (score ${s}/100): conoce hace ${resp.knows_since}; ingresos estables: ${resp.stable_income}; prestaría: ${resp.would_lend_money}; responsabilidad: ${resp.financial_responsibility}`;
+			})
+			.join('\n');
+
+		await triggerCreditDecision(ref.userId, applicant.phone, {
+			name: applicant.name ?? 'desconocido',
+			monthlyIncome: applicant.monthlyIncome ?? 0,
+			occupation: applicant.occupation ?? 'desconocida',
+			trustScore,
+			referencesSummary
+		});
 	}
 
 	return { ok: true, message: 'Respuesta guardada. Gracias por tu tiempo.' };
