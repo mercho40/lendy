@@ -12,8 +12,11 @@
  * 5. [Hook] Loan creation + payment loop (reactive + cron reminders)
  */
 
+import { eq } from 'drizzle-orm';
 import { sendText } from '../whatsapp';
 import { evaluateCredit } from './handlers/credit-decision';
+import { db } from '../db';
+import { conversations, loans } from '../db/schema';
 
 const ELEVENLABS_AGENT_ID = 'agent_7601kp6cks47ehat26gjm20y2p86';
 
@@ -65,14 +68,51 @@ export async function triggerCreditDecision(
 	const decision = await evaluateCredit(userId, userData);
 
 	if (decision.approved) {
+		const montoFmt = decision.amount.toLocaleString('es-AR');
+		const cuotaFmt = Math.round(decision.weeklyPayment).toLocaleString('es-AR');
+
+		// Create the loan in DB
+		const amountCents = Math.round(decision.amount * 100);
+		const installmentCents = Math.round(decision.weeklyPayment * 100);
+		const nextDue = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+		await db.insert(loans).values({
+			userId,
+			amount: amountCents,
+			totalInstallments: decision.weeks,
+			installmentsPaid: 0,
+			installmentAmount: installmentCents,
+			interestRate: decision.tna * 100, // basis points
+			status: 'active',
+			nextDueDate: nextDue,
+			terms: decision
+		});
+
+		// Update conversation state to active_loan
+		await db
+			.update(conversations)
+			.set({ state: 'active_loan' })
+			.where(eq(conversations.userId, userId));
+
 		await sendText(
 			userPhone,
 			`¡Buenas noticias, ${userData.name}! Tu crédito fue aprobado.\n\n` +
-				`💰 Monto: $${decision.amount}\n` +
-				`📅 ${decision.weeks} cuotas semanales de $${decision.weeklyPayment}\n` +
-				`📊 TNA: ${decision.tna}%\n\n` +
-				`¿Querés aceptar? Respondé "acepto" y te mando el link de pago de la primera cuota.`
+				`💰 Monto: $${montoFmt}\n` +
+				`📅 ${decision.weeks} cuotas semanales de $${cuotaFmt}\n\n` +
+				`El dinero se va a acreditar en tu cuenta en las próximas horas. Te aviso cuando esté listo.`
 		);
+
+		// Simulate disbursement after a short delay
+		setTimeout(async () => {
+			try {
+				await sendText(
+					userPhone,
+					`✅ ¡Listo! Se acreditaron $${montoFmt} en tu cuenta.\n\n` +
+						`Tu primera cuota de $${cuotaFmt} vence el ${nextDue.toLocaleDateString('es-AR')}.\n` +
+						`Cuando quieras pagar escribime "pagar" y te mando el link.`
+				);
+			} catch { /* ignore */ }
+		}, 5000); // 5 seconds for demo effect
 	} else {
 		await sendText(
 			userPhone,

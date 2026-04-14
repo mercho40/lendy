@@ -2,7 +2,8 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../db';
 import { users, references } from '../../db/schema';
 import { generateReferenceCode } from '../pipeline';
-import type { ToolResult, SaveUserProfileInput, SubmitReferencesInput } from '../types';
+import { BASE_URL } from '$env/static/private';
+import type { ToolResult, SaveUserProfileInput } from '../types';
 
 export async function saveUserProfile(
 	userId: number,
@@ -19,43 +20,50 @@ export async function saveUserProfile(
 		})
 		.where(eq(users.id, userId));
 
-	return { ok: true, message: 'Perfil guardado' };
+	const voiceUrl = `${BASE_URL}/voice?user=${userId}&name=${encodeURIComponent(input.name)}`;
+
+	return {
+		ok: true,
+		message: `Perfil guardado. IMPORTANTE: Mandále al usuario este link de verificación por voz: ${voiceUrl} — Decile que hable con Lucía y cuando termine que vuelva y escriba "listo".`
+	};
 }
 
 export async function submitReferences(
-	userId: number,
-	userName: string,
-	input: SubmitReferencesInput
+	userId: number
 ): Promise<ToolResult> {
-	const codeLines: string[] = [];
+	const count = 3;
+	const codes: string[] = [];
 
-	for (const ref of input.references) {
-		// Generate a unique code, retry on collision (very unlikely but safe)
+	for (let i = 0; i < count; i++) {
+		// Generate unique code — retry on collision
 		let code: string;
 		let attempts = 0;
 		do {
 			code = generateReferenceCode();
+			const [existing] = await db
+				.select()
+				.from(references)
+				.where(eq(references.referenceCode, code))
+				.limit(1);
+			if (!existing) break;
 			attempts++;
-		} while (attempts < 5);
+		} while (attempts < 10);
 
 		await db.insert(references).values({
 			userId,
-			phone: null, // phone is unknown until the reference writes to the bot
-			name: ref.name ?? null,
-			relationship: ref.relationship ?? null,
+			phone: null,
+			name: null,
+			relationship: null,
 			referenceCode: code
 		});
 
-		const label = ref.name ?? ref.phone ?? 'tu contacto';
-		codeLines.push(`${code} → ${label}`);
+		codes.push(code);
 	}
-
-	const codesText = codeLines.join('\n');
-	const botNumber = '+1 201-252-0899';
 
 	return {
 		ok: true,
-		message: `Referencias registradas. Compartí estos códigos con tus contactos y pediles que le escriban a ${botNumber}:\n${codesText}\n\nCada uno tiene que mandar su código para que podamos verificar.`,
+		message: `Códigos generados: ${codes.join(', ')}`,
+		codes,
 		newState: 'verification'
 	};
 }

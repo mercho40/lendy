@@ -9,14 +9,40 @@ const ONBOARDING_TOOLS: Anthropic.Tool[] = [
 	{
 		name: 'save_user_profile',
 		description:
-			'Guarda el perfil del usuario. Llamar cuando tengas nombre, DNI, ingreso mensual y ocupación.',
+			'Guarda el perfil completo del usuario. Llamar cuando tengas TODOS los datos: básicos + scoring. Los campos de scoring van en el objeto scoring_data.',
 		input_schema: {
 			type: 'object' as const,
 			properties: {
 				name: { type: 'string', description: 'Nombre completo' },
 				dni: { type: 'string', description: 'DNI (solo números)' },
-				monthly_income: { type: 'integer', description: 'Ingreso mensual en pesos ARS' },
-				occupation: { type: 'string', description: 'Ocupación / trabajo' }
+				monthly_income: { type: 'integer', description: 'Ingreso mensual neto en pesos ARS' },
+				occupation: { type: 'string', description: 'Ocupación / trabajo' },
+				scoring_data: {
+					type: 'object',
+					description: 'Datos del cuestionario de scoring',
+					properties: {
+						date_of_birth: { type: 'string', description: 'Fecha de nacimiento YYYY-MM-DD' },
+						marital_status: { type: 'string', enum: ['soltero', 'casado', 'union_libre', 'divorciado', 'viudo'] },
+						dependents: { type: 'integer', description: '0-4+' },
+						education: { type: 'string', enum: ['primario', 'secundario', 'terciario', 'universitario', 'posgrado'] },
+						postal_code: { type: 'string' },
+						locality: { type: 'string' },
+						residence_time: { type: 'string', enum: ['menos_6_meses', '6m_2_anios', '2_5_anios', 'mas_5_anios'] },
+						housing: { type: 'string', enum: ['propia', 'alquilada', 'familiar', 'otra'] },
+						employment_type: { type: 'string', enum: ['empleado_dependencia', 'monotributista', 'informal', 'jubilado', 'desempleado', 'estudiante'] },
+						job_tenure: { type: 'string', enum: ['menos_3_meses', '3_12_meses', '1_3_anios', 'mas_3_anios'] },
+						payment_method: { type: 'string', enum: ['cuenta_bancaria', 'transferencia', 'efectivo', 'billetera_virtual', 'otro'] },
+						other_income: { type: 'string', enum: ['estables', 'ocasionales', 'no'] },
+						has_bank_account: { type: 'boolean' },
+						bank_account_years: { type: 'integer' },
+						credit_cards: { type: 'string', enum: ['ninguna', 'una', 'mas_de_una'] },
+						existing_debts: { type: 'string', enum: ['ninguno', 'uno', 'dos_o_mas'] },
+						payment_delays: { type: 'string', enum: ['nunca', 'una_vez', 'dos_o_mas'] },
+						loan_purpose: { type: 'string', enum: ['gastos_hogar', 'emergencia_medica', 'consolidar_deudas', 'inversion_negocio', 'consumo', 'educacion', 'otro'] },
+						weekly_payment_capacity: { type: 'integer', description: 'Cuánto puede pagar por semana en ARS' },
+						preferred_payment: { type: 'string', enum: ['debito_automatico', 'transferencia', 'efectivo', 'billetera_virtual'] }
+					}
+				}
 			},
 			required: ['name', 'dni', 'monthly_income', 'occupation']
 		}
@@ -24,30 +50,12 @@ const ONBOARDING_TOOLS: Anthropic.Tool[] = [
 	{
 		name: 'submit_references',
 		description:
-			'Registra los 3 contactos de referencia del usuario. Cada contacto es un número de WhatsApp. Esto completa el onboarding y triggerea la verificación.',
+			'Genera 3 códigos de referencia REF-XXXX para que el usuario los comparta con sus contactos. Llamar inmediatamente después de save_user_profile. No requiere ningún dato de las referencias.',
 		input_schema: {
 			type: 'object' as const,
 			properties: {
-				references: {
-					type: 'array',
-					items: {
-						type: 'object',
-						properties: {
-							phone: { type: 'string', description: 'Número de WhatsApp con código de país' },
-							name: { type: 'string', description: 'Nombre de la referencia (si lo dio)' },
-							relationship: {
-								type: 'string',
-								description: 'Relación con el usuario (amigo, familiar, etc.)'
-							}
-						},
-						required: ['phone']
-					},
-					minItems: 1,
-					maxItems: 3,
-					description: 'Lista de referencias (ideal 3)'
-				}
-			},
-			required: ['references']
+				count: { type: 'integer', description: 'Cantidad de códigos a generar (default 3)' }
+			}
 		}
 	}
 ];
@@ -136,7 +144,7 @@ export function getTools(state: ConversationState): Anthropic.Tool[] {
 import { saveUserProfile, submitReferences } from './handlers/onboarding';
 import { handleSaveReferenceResponse } from './handlers/verification';
 import { handleActiveLoanTool } from './handlers/active-loan';
-import type { SaveUserProfileInput, SubmitReferencesInput, ReferenceResponse } from './types';
+import type { SaveUserProfileInput, ReferenceResponse } from './types';
 
 export async function handleTool(
 	name: string,
@@ -146,14 +154,25 @@ export async function handleTool(
 	switch (ctx.state) {
 		case 'onboarding': {
 			if (name === 'save_user_profile') {
-				return saveUserProfile(ctx.userId, input as unknown as SaveUserProfileInput);
+				const result = await saveUserProfile(ctx.userId, input as unknown as SaveUserProfileInput);
+				// After saving profile, send voice link directly via WhatsApp
+				// (don't rely on the agent to forward it — it sometimes refuses URLs)
+				try {
+					const { sendText } = await import('./../../whatsapp');
+					const { BASE_URL } = await import('$env/static/private');
+					const name = (input as any).name ?? 'Usuario';
+					const voiceUrl = `${BASE_URL}/voice?user=${ctx.userId}&name=${encodeURIComponent(name)}`;
+					await sendText(
+						ctx.phone,
+						`¡Perfil guardado! Ahora necesitamos una verificación rápida por voz 🎙️\n\n` +
+							`Tocá este link y hablá con nuestra asistente Lucía (menos de 5 min):\n${voiceUrl}\n\n` +
+							`Cuando termines, volvé acá y escribime "listo" para seguir.`
+					);
+				} catch { /* swallow */ }
+				return result;
 			}
 			if (name === 'submit_references') {
-				// Need user name for verification messages — pass from context or default
-				return {
-					...(await submitReferences(ctx.userId, 'Usuario', input as unknown as SubmitReferencesInput)),
-					newState: 'verification'
-				};
+				return submitReferences(ctx.userId);
 			}
 			return { error: `Tool desconocida: ${name}` };
 		}

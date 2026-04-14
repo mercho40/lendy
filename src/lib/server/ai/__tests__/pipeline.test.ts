@@ -55,7 +55,7 @@ describe('Pipeline: triggerCreditDecision', () => {
 		);
 		expect(sendText).toHaveBeenCalledWith(
 			'+5491155551234',
-			expect.stringContaining('$20000')
+			expect.stringContaining('20')
 		);
 	});
 });
