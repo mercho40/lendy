@@ -8,7 +8,8 @@
 		{ href: '/admin', label: 'Overview' },
 		{ href: '/admin/users', label: 'Usuarios' },
 		{ href: '/admin/references', label: 'Referencias' },
-		{ href: '/admin/loans', label: 'Préstamos' }
+		{ href: '/admin/loans', label: 'Préstamos' },
+		{ href: '/admin/manager', label: 'Manager' }
 	];
 
 	function isActive(href: string) {

@@ -24,7 +24,7 @@ export const referenceStatusEnum = pgEnum('reference_status', [
 	'responded',
 	'failed'
 ]);
-export const managerRunTriggerEnum = pgEnum('manager_run_trigger', ['cron', 'manual']);
+export const managerRunTriggerEnum = pgEnum('manager_run_trigger', ['cron', 'manual', 'chat']);
 export const managerActionKindEnum = pgEnum('manager_action_kind', [
 	'snapshot',
 	'nudge',
@@ -43,6 +43,9 @@ export const users = pgTable('users', {
 	onboardingComplete: boolean('onboarding_complete').default(false).notNull(),
 	trustScore: integer('trust_score'), // 0-100, calculated from references
 	lastNudgedAt: timestamp('last_nudged_at'), // dedupe manager nudges
+	voiceTranscript: jsonb('voice_transcript'), // ElevenLabs transcript array
+	voiceAnalysis: jsonb('voice_analysis'), // ElevenLabs analysis/summary object
+	voiceCompletedAt: timestamp('voice_completed_at'),
 	createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -129,4 +132,12 @@ export const managerActions = pgTable('manager_actions', {
 	summary: text('summary').notNull(),
 	payload: jsonb('payload'),
 	createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Chat operativo con el manager. Es una fila singleton (id=1) cuyo jsonb
+// `messages` acumula toda la conversación con el operador.
+export const managerChats = pgTable('manager_chats', {
+	id: serial('id').primaryKey(),
+	messages: jsonb('messages').default([]).notNull(),
+	updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
