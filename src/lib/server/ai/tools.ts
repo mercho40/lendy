@@ -158,7 +158,7 @@ export async function handleTool(
 				// After saving profile, send voice link directly via WhatsApp
 				// (don't rely on the agent to forward it — it sometimes refuses URLs)
 				try {
-					const { sendText } = await import('./../../whatsapp');
+					const { sendText } = await import('../whatsapp');
 					const { BASE_URL } = await import('$env/static/private');
 					const name = (input as any).name ?? 'Usuario';
 					const voiceUrl = `${BASE_URL}/voice?user=${ctx.userId}&name=${encodeURIComponent(name)}`;

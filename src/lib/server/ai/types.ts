@@ -6,6 +6,7 @@ export interface ToolResult {
 	message?: string;
 	error?: string;
 	newState?: ConversationState;
+	codes?: string[]; // submitReferences devuelve los REF-XXXX generados
 }
 
 export interface AgentContext {
