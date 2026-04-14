@@ -1,41 +1,40 @@
-import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
+import { BASE_URL } from '$env/static/private';
 
-export const mpClient = new MercadoPagoConfig({
-	accessToken: process.env.MP_ACCESS_TOKEN!
-});
+// Mock mínimo de MercadoPago para la demo — no llama al SDK real.
+// createPaymentPreference devuelve un link a /mock-pay/[paymentId] que es nuestro
+// checkout falso. getPayment sintetiza la respuesta a partir del id que manda el
+// mock checkout al webhook.
+
+const MOCK_PREFIX = 'MOCK';
+
+export interface MockPayment {
+	id: string;
+	external_reference: string;
+	status: 'approved' | 'rejected' | 'pending';
+}
 
 export async function createPaymentPreference(opts: {
 	loanId: number;
 	paymentId: number;
 	amountPesos: number;
 	description: string;
-}) {
-	const baseUrl = process.env.BASE_URL!;
-	const pref = new Preference(mpClient);
-	const result = await pref.create({
-		body: {
-			items: [
-				{
-					id: `loan-${opts.loanId}-pay-${opts.paymentId}`,
-					title: opts.description,
-					quantity: 1,
-					unit_price: opts.amountPesos,
-					currency_id: 'ARS'
-				}
-			],
-			external_reference: String(opts.paymentId),
-			back_urls: {
-				success: `${baseUrl}/admin/loans`,
-				failure: `${baseUrl}/admin/loans`,
-				pending: `${baseUrl}/admin/loans`
-			},
-			notification_url: `${baseUrl}/api/payments/webhook`
-		}
-	});
-	return { id: result.id!, initPoint: result.init_point! };
+}): Promise<{ id: string; initPoint: string }> {
+	const id = `${MOCK_PREFIX}-PREF-${opts.paymentId}-${Date.now()}`;
+	const initPoint = `${BASE_URL}/mock-pay/${opts.paymentId}`;
+	return { id, initPoint };
 }
 
-export async function getPayment(paymentId: string) {
-	const payment = new Payment(mpClient);
-	return payment.get({ id: paymentId });
+// El mock checkout manda al webhook un id con shape MOCK-<paymentRowId>-<APPROVED|REJECTED>
+export async function getPayment(mpPaymentId: string): Promise<MockPayment> {
+	if (!mpPaymentId.startsWith(`${MOCK_PREFIX}-`)) {
+		throw new Error(`getPayment mock no reconoce el id: ${mpPaymentId}`);
+	}
+	const parts = mpPaymentId.split('-');
+	const paymentRowId = parts[1];
+	const outcome = (parts[2] ?? 'APPROVED').toUpperCase();
+	return {
+		id: mpPaymentId,
+		external_reference: paymentRowId,
+		status: outcome === 'REJECTED' ? 'rejected' : 'approved'
+	};
 }

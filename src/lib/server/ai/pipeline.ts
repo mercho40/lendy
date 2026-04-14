@@ -69,8 +69,8 @@ export async function triggerCreditDecision(
 			userPhone,
 			`¡Buenas noticias, ${userData.name}! Tu crédito fue aprobado.\n\n` +
 				`💰 Monto: $${decision.amount}\n` +
-				`📅 ${decision.installments} cuotas semanales de $${decision.weeklyPayment}\n` +
-				`📊 Tasa: ${decision.interestRate / 100}%\n\n` +
+				`📅 ${decision.weeks} cuotas semanales de $${decision.weeklyPayment}\n` +
+				`📊 TNA: ${decision.tna}%\n\n` +
 				`¿Querés aceptar? Respondé "acepto" y te mando el link de pago de la primera cuota.`
 		);
 	} else {

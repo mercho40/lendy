@@ -66,6 +66,7 @@ export const loans = pgTable('loans', {
 	status: loanStatusEnum('status').default('active').notNull(),
 	nextDueDate: timestamp('next_due_date'),
 	terms: jsonb('terms'), // full credit decision output
+	lastReminderAt: timestamp('last_reminder_at'), // dedupe cron reminders
 	createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
