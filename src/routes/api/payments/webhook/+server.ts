@@ -50,13 +50,32 @@ export const POST: RequestHandler = async ({ request, url }) => {
 				.where(eq(loans.id, loan.id));
 
 			const [borrower] = await db.select().from(users).where(eq(users.id, loan.userId)).limit(1);
+			const remaining = loan.totalInstallments - newPaid;
+			const cuotaPesos = Math.round(loan.installmentAmount / 100).toLocaleString('es-AR');
+
 			const msg = fullyPaid
-				? `¡Listo! Pagaste la última cuota de tu préstamo. Gracias 🙌`
-				: `Recibimos tu pago de la cuota ${newPaid}/${loan.totalInstallments}. Próxima en 7 días.`;
+				? `¡Listo! Pagaste la última cuota de tu préstamo. ¡Gracias por confiar en GrameenBot! 🙌`
+				: `✅ Recibimos tu pago de la cuota ${newPaid}/${loan.totalInstallments}.\n\n` +
+					`Te quedan ${remaining} cuotas de $${cuotaPesos}.`;
 			try {
 				await sendText(borrower.phone, msg);
 			} catch {
 				/* swallow */
+			}
+
+			// DEMO: After first payment, offer early payment discount after 8 seconds
+			if (newPaid === 1 && !fullyPaid) {
+				const descuento = Math.round(loan.installmentAmount * 0.9 / 100).toLocaleString('es-AR');
+				setTimeout(async () => {
+					try {
+						await sendText(
+							borrower.phone,
+							`💡 ¡Oferta especial!\n\n` +
+								`Si pagás la cuota 2 ahora, te hacemos un 10% de descuento: $${descuento} en vez de $${cuotaPesos}.\n\n` +
+								`¿Querés aprovechar? Escribime "pagar" y te mando el link con el descuento.`
+						);
+					} catch { /* swallow */ }
+				}, 8000);
 			}
 		} else if (status === 'rejected') {
 			await db
