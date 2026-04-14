@@ -133,12 +133,10 @@ export function getTools(state: ConversationState): Anthropic.Tool[] {
 // Tool handlers — delegate to specific implementations
 // ============================================================
 
-// These will be implemented by each agent's handler module
-// For now, stubs that the tests can mock
-
-import { handleOnboardingTool } from './handlers/onboarding';
-import { handleVerificationTool } from './handlers/verification';
+import { saveUserProfile, submitReferences } from './handlers/onboarding';
+import { handleSaveReferenceResponse } from './handlers/verification';
 import { handleActiveLoanTool } from './handlers/active-loan';
+import type { SaveUserProfileInput, SubmitReferencesInput, ReferenceResponse } from './types';
 
 export async function handleTool(
 	name: string,
@@ -146,13 +144,34 @@ export async function handleTool(
 	ctx: AgentContext
 ): Promise<ToolResult> {
 	switch (ctx.state) {
-		case 'onboarding':
-			return handleOnboardingTool(name, input, ctx);
-		case 'verification':
-			return handleVerificationTool(name, input, ctx);
-		case 'active_loan':
-			return handleActiveLoanTool(name, input, ctx);
+		case 'onboarding': {
+			if (name === 'save_user_profile') {
+				return saveUserProfile(ctx.userId, input as unknown as SaveUserProfileInput);
+			}
+			if (name === 'submit_references') {
+				// Need user name for verification messages — pass from context or default
+				return {
+					...(await submitReferences(ctx.userId, 'Usuario', input as unknown as SubmitReferencesInput)),
+					newState: 'verification'
+				};
+			}
+			return { error: `Tool desconocida: ${name}` };
+		}
+		case 'verification': {
+			if (name === 'save_reference_response') {
+				const result = await handleSaveReferenceResponse(
+					input as unknown as ReferenceResponse,
+					{ userId: ctx.userId, phone: ctx.phone }
+				);
+				return { ok: result.ok, message: result.message };
+			}
+			return { error: `Tool desconocida: ${name}` };
+		}
+		case 'active_loan': {
+			const result = await handleActiveLoanTool(name, input, { userId: ctx.userId });
+			return { data: result };
+		}
 		default:
-			return { data: { error: `No tools for state: ${ctx.state}` } };
+			return { error: `No tools for state: ${ctx.state}` };
 	}
 }
