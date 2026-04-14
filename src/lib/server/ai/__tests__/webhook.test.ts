@@ -39,11 +39,12 @@ vi.mock('$lib/server/db', () => ({
 vi.mock('$lib/server/db/schema', () => ({
 	users: { id: 'users.id', phone: 'users.phone' },
 	conversations: { id: 'conversations.id', userId: 'conversations.userId', messages: 'conversations.messages' },
-	references: { id: 'references.id', phone: 'references.phone', userId: 'references.userId' }
+	references: { id: 'references.id', phone: 'references.phone', userId: 'references.userId', referenceCode: 'references.reference_code' }
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((col, val) => ({ col, val }))
+	eq: vi.fn((col, val) => ({ col, val })),
+	isNotNull: vi.fn((col) => ({ col }))
 }));
 
 const mockSendText = vi.fn().mockResolvedValue(undefined);
@@ -103,11 +104,11 @@ describe('WhatsApp Webhook', () => {
 	});
 
 	describe('POST - inbound text creates user and conversation', () => {
-		it('creates a new user and conversation for unknown phone number', async () => {
+		it('creates a new user and sends welcome message for unknown phone without ref code', async () => {
 			const phone = '+5491155551234';
 			const text = 'Hola, quiero un préstamo';
 
-			// references lookup: no match
+			// references lookup by phone: no match
 			mockSelectLimit.mockResolvedValueOnce([]);
 			// users lookup: no match
 			mockSelectLimit.mockResolvedValueOnce([]);
@@ -116,28 +117,25 @@ describe('WhatsApp Webhook', () => {
 			// insert user
 			mockInsertReturning.mockResolvedValueOnce([newUser]);
 
-			// conversations lookup: no match
-			mockSelectLimit.mockResolvedValueOnce([]);
-
 			const newConvo = { id: 10, userId: 1, messages: [], state: 'onboarding' };
 			// insert conversation
 			mockInsertReturning.mockResolvedValueOnce([newConvo]);
-
-			// Agent fails (no API key)
-			mockRunAgent.mockRejectedValueOnce(new Error('No API key'));
 
 			const req = makeRequest(inboundPayload(phone, text));
 			const res = await POST({ request: req } as any);
 
 			expect(res.status).toBe(200);
 
-			// Should have tried to insert a user
+			// Should have inserted a user
 			expect(mockDbInsert).toHaveBeenCalled();
 
-			// Should send fallback message
+			// Agent should NOT be called for new users without a code
+			expect(mockRunAgent).not.toHaveBeenCalled();
+
+			// Should send the welcome message
 			expect(mockSendText).toHaveBeenCalledWith(
 				phone,
-				'Estamos configurando el sistema. Volvé a intentar en unos minutos.'
+				expect.stringContaining('Bienvenido')
 			);
 		});
 

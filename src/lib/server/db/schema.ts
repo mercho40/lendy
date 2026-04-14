@@ -43,9 +43,10 @@ export const references = pgTable('user_references', {
 	userId: integer('user_id')
 		.references(() => users.id)
 		.notNull(),
-	phone: text('phone').notNull(),
+	phone: text('phone'), // null until the reference writes to the bot
 	name: text('name'),
 	relationship: text('relationship'),
+	referenceCode: text('reference_code').unique(), // REF-XXXX format
 	status: referenceStatusEnum('status').default('pending').notNull(),
 	responses: jsonb('responses'), // { answers to verification questions }
 	score: integer('score'), // individual reference score 0-100

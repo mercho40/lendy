@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { ANTHROPIC_API_KEY } from '$env/static/private';
 import type { ConversationState, AgentContext } from './types';
 import { getSystemPrompt } from './system-prompt';
 import { getTools, handleTool } from './tools';
@@ -6,7 +7,7 @@ import { getTools, handleTool } from './tools';
 const MAX_ITERATIONS = 5;
 const MODEL = 'claude-sonnet-4-6';
 
-const client = new Anthropic();
+const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 export type AgentMessage = Anthropic.MessageParam;
 
