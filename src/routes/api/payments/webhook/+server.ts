@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { and, eq, ne } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { users, loans, payments } from '$lib/server/db/schema';
 import { getPayment } from '$lib/server/mercadopago';
@@ -50,28 +50,13 @@ export const POST: RequestHandler = async ({ request, url }) => {
 				.where(eq(loans.id, loan.id));
 
 			const [borrower] = await db.select().from(users).where(eq(users.id, loan.userId)).limit(1);
-			const msgToBorrower = fullyPaid
+			const msg = fullyPaid
 				? `¡Listo! Pagaste la última cuota de tu préstamo. Gracias 🙌`
 				: `Recibimos tu pago de la cuota ${newPaid}/${loan.totalInstallments}. Próxima en 7 días.`;
-			const msgToGroup = fullyPaid
-				? `${borrower.name ?? borrower.phone} terminó de pagar su préstamo.`
-				: `${borrower.name ?? borrower.phone} pagó su cuota (${newPaid}/${loan.totalInstallments}).`;
-
 			try {
-				await sendText(borrower.phone, msgToBorrower);
+				await sendText(borrower.phone, msg);
 			} catch {
 				/* swallow */
-			}
-			const groupMembers = await db
-				.select()
-				.from(users)
-				.where(and(eq(users.groupId, loan.groupId), ne(users.id, loan.userId)));
-			for (const m of groupMembers) {
-				try {
-					await sendText(m.phone, msgToGroup);
-				} catch {
-					/* swallow */
-				}
 			}
 		} else if (status === 'rejected') {
 			await db

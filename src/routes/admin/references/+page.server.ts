@@ -11,17 +11,15 @@ export const load: PageServerLoad = async () => {
 			phone: references.phone,
 			relationship: references.relationship,
 			status: references.status,
-			sentiment: references.sentiment,
-			responseSummary: references.responseSummary,
-			contactedAt: references.contactedAt,
-			respondedAt: references.respondedAt,
+			score: references.score,
+			responses: references.responses,
 			createdAt: references.createdAt,
 			applicantId: users.id,
 			applicantName: users.name,
 			applicantPhone: users.phone
 		})
 		.from(references)
-		.leftJoin(users, eq(references.applicantId, users.id))
+		.leftJoin(users, eq(references.userId, users.id))
 		.orderBy(desc(references.createdAt));
 
 	return { references: rows };

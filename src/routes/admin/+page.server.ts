@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { count, eq, sum } from 'drizzle-orm';
+import { count, eq, gte, sum } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { users, references, loans, payments, conversations } from '$lib/server/db/schema';
 
@@ -38,7 +38,7 @@ export const load: PageServerLoad = async () => {
 	const [refsPositive] = await db
 		.select({ c: count() })
 		.from(references)
-		.where(eq(references.sentiment, 'positive'));
+		.where(gte(references.score, 70));
 
 	const loansActive = await db.select({ c: count() }).from(loans).where(eq(loans.status, 'active'));
 	const loansOverdue = await db

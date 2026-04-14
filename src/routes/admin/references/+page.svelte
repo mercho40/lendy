@@ -7,6 +7,20 @@
 	import { formatDate } from '$lib/format';
 
 	let { data }: { data: PageData } = $props();
+
+	function scoreClass(s: number | null): string {
+		if (s === null) return 'text-muted-foreground';
+		if (s >= 70) return 'text-foreground';
+		if (s >= 40) return 'text-foreground';
+		return 'text-destructive';
+	}
+
+	function responsesPreview(r: unknown): string {
+		if (!r || typeof r !== 'object') return '—';
+		const entries = Object.entries(r as Record<string, unknown>);
+		if (!entries.length) return '—';
+		return entries.map(([k, v]) => `${k}: ${String(v)}`).join(' · ');
+	}
 </script>
 
 <div class="space-y-6">
@@ -27,37 +41,37 @@
 						<Table.Head>Teléfono</Table.Head>
 						<Table.Head>Relación</Table.Head>
 						<Table.Head>Estado</Table.Head>
-						<Table.Head>Sentimiento</Table.Head>
-						<Table.Head>Resumen</Table.Head>
-						<Table.Head>Contactada</Table.Head>
+						<Table.Head class="text-right">Score</Table.Head>
+						<Table.Head>Respuestas</Table.Head>
+						<Table.Head>Creada</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
 					{#each data.references as r (r.id)}
-						<Table.Row class={cn(r.sentiment === 'negative' && 'bg-destructive/5 hover:bg-destructive/10')}>
+						<Table.Row
+							class={cn(
+								r.score !== null && r.score < 40 && 'bg-destructive/5 hover:bg-destructive/10'
+							)}
+						>
 							<Table.Cell>
 								<div class="font-medium">{r.applicantName ?? '—'}</div>
 								<div class="font-mono text-xs text-muted-foreground">
 									{r.applicantPhone ?? ''}
 								</div>
 							</Table.Cell>
-							<Table.Cell class="font-medium">{r.name}</Table.Cell>
+							<Table.Cell class="font-medium">{r.name ?? '—'}</Table.Cell>
 							<Table.Cell class="font-mono text-xs">{r.phone}</Table.Cell>
 							<Table.Cell class="text-muted-foreground">
 								{r.relationship ?? '—'}
 							</Table.Cell>
 							<Table.Cell><StatusBadge status={r.status} /></Table.Cell>
-							<Table.Cell>
-								{#if r.sentiment}
-									<StatusBadge status={r.sentiment} />
-								{:else}
-									<span class="text-muted-foreground">—</span>
-								{/if}
+							<Table.Cell class="text-right tabular-nums {scoreClass(r.score)}">
+								{r.score ?? '—'}
 							</Table.Cell>
 							<Table.Cell class="max-w-xs truncate text-sm text-muted-foreground">
-								{r.responseSummary ?? '—'}
+								{responsesPreview(r.responses)}
 							</Table.Cell>
-							<Table.Cell class="text-muted-foreground">{formatDate(r.contactedAt)}</Table.Cell>
+							<Table.Cell class="text-muted-foreground">{formatDate(r.createdAt)}</Table.Cell>
 						</Table.Row>
 					{:else}
 						<Table.Row>
