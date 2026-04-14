@@ -1,5 +1,8 @@
 <script lang="ts">
+	import type { PageData } from './$types';
 	import { Button } from '$lib/components/ui/button';
+
+	let { data }: { data: PageData } = $props();
 </script>
 
 <svelte:head>
@@ -10,21 +13,17 @@
 	/>
 </svelte:head>
 
-<div
-	class="relative min-h-screen overflow-hidden bg-background text-foreground"
->
+<div class="relative min-h-screen overflow-hidden bg-background text-foreground">
 	<!-- ambient gradient -->
 	<div
 		class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_theme(colors.primary/10),_transparent_50%),radial-gradient(ellipse_at_bottom_right,_theme(colors.primary/5),_transparent_60%)]"
 	></div>
 
-	<div class="relative mx-auto flex min-h-screen max-w-5xl flex-col">
+	<div class="relative mx-auto flex min-h-screen max-w-6xl flex-col">
 		<!-- Top bar -->
 		<header class="flex items-center justify-between px-6 py-6">
 			<div class="flex items-center gap-2">
-				<span
-					class="inline-block h-6 w-6 rounded-full bg-foreground text-background"
-				></span>
+				<span class="inline-block h-6 w-6 rounded-full bg-foreground text-background"></span>
 				<span class="text-lg font-semibold tracking-tight">Lendy</span>
 			</div>
 			<div class="flex items-center gap-2 text-sm text-muted-foreground">
@@ -40,8 +39,8 @@
 		</header>
 
 		<!-- Hero -->
-		<main class="flex flex-1 flex-col justify-center px-6 py-16">
-			<div class="max-w-3xl">
+		<main class="flex flex-1 flex-col justify-center gap-12 px-6 py-16 lg:flex-row lg:items-center">
+			<div class="flex-1">
 				<div
 					class="mb-6 inline-flex items-center rounded-full border bg-card px-3 py-1 text-xs font-medium uppercase tracking-wider text-muted-foreground"
 				>
@@ -54,8 +53,8 @@
 				</h1>
 				<p class="mt-6 max-w-2xl text-lg text-muted-foreground">
 					Lendy underwrites people the traditional system can't see. Six agents handle
-					onboarding, voice verification, social vouching, credit decision, disbursement
-					and collections — all on WhatsApp, all autonomous.
+					onboarding, voice verification, social vouching, credit decision, disbursement and
+					collections — all on WhatsApp, all autonomous.
 				</p>
 
 				<div class="mt-10 flex flex-wrap items-center gap-3">
@@ -84,12 +83,47 @@
 					</div>
 				</dl>
 			</div>
+
+			<!-- QR card -->
+			<aside class="shrink-0 lg:w-[300px]">
+				<div class="rounded-2xl border bg-card p-6 shadow-sm">
+					<div class="mb-4 flex items-center justify-between">
+						<span class="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+							Try the bot
+						</span>
+						<span
+							class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300"
+						>
+							<span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+							Live
+						</span>
+					</div>
+
+					<div
+						class="flex items-center justify-center rounded-xl bg-background p-3 [&_svg]:h-full [&_svg]:w-full"
+					>
+						<div class="aspect-square w-full max-w-[240px]">
+							{@html data.qrSvg}
+						</div>
+					</div>
+
+					<p class="mt-4 text-center text-xs text-muted-foreground">
+						Scan to chat on WhatsApp
+					</p>
+					<a
+						href={data.whatsappUrl}
+						target="_blank"
+						rel="noopener"
+						class="mt-1 block text-center font-mono text-sm font-medium text-foreground underline-offset-4 hover:underline"
+					>
+						{data.whatsappNumber}
+					</a>
+				</div>
+			</aside>
 		</main>
 
 		<!-- Footer -->
-		<footer
-			class="border-t px-6 py-6 text-xs text-muted-foreground"
-		>
+		<footer class="border-t px-6 py-6 text-xs text-muted-foreground">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<span>© 2026 Lendy · hackathon build</span>
 				<span class="font-mono">Claude · Kapso · ElevenLabs · MercadoPago · Neon · Vercel</span>
