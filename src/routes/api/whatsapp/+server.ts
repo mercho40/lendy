@@ -48,8 +48,28 @@ export const POST: RequestHandler = async ({ request }) => {
 			.limit(1);
 
 		if (existingRef) {
-			// Route to the applicant's conversation in verification context
-			await handleReferenceMessage(existingRef, text, from);
+			// Only route as a reference if the reference is still pending a response
+			// AND the applicant's conversation is still in verification. Otherwise this
+			// phone is a past reference who happens to be messaging us again — don't
+			// leak the applicant's active-loan data (see review I1).
+			const [applicantConvo] = await db
+				.select()
+				.from(conversations)
+				.where(eq(conversations.userId, existingRef.userId))
+				.limit(1);
+
+			const refDone = existingRef.status === 'responded' || existingRef.status === 'failed';
+			const applicantPastVerification = applicantConvo && applicantConvo.state !== 'verification';
+
+			if (refDone || applicantPastVerification) {
+				await sendText(
+					from,
+					'¡Gracias! Ya tenemos registradas tus respuestas. Si querés pedir un crédito propio, escribinos desde este mismo número en un rato.'
+				);
+				return new Response('ok');
+			}
+
+			await handleReferenceMessage(existingRef, text, from, applicantConvo);
 			return new Response('ok');
 		}
 
@@ -145,7 +165,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 			// Greet them and ask if they have a reference code or want a loan
 			const welcomeMsg =
-				'¡Hola! Bienvenido/a a GrameenBot 👋\n\n¿Venís por un crédito propio o te pasaron un código de referencia?';
+				'¡Hola! Bienvenido/a a Lendy 👋\n\n¿Venís por un crédito propio o te pasaron un código de referencia?';
 			await sendText(from, welcomeMsg);
 
 			// Save the welcome as an assistant message so the agent has context
@@ -221,15 +241,11 @@ export const POST: RequestHandler = async ({ request }) => {
 async function handleReferenceMessage(
 	ref: typeof references.$inferSelect,
 	text: string,
-	from: string
+	from: string,
+	existingConvo?: typeof conversations.$inferSelect | undefined
 ) {
-	// Find or create the applicant's conversation
-	let [convo] = await db
-		.select()
-		.from(conversations)
-		.where(eq(conversations.userId, ref.userId))
-		.limit(1);
-
+	// Reuse the convo already fetched in the gate, otherwise create one.
+	let convo = existingConvo;
 	if (!convo) {
 		// Need the applicant's phone for the new conversation row (required by schema)
 		const [applicant] = await db

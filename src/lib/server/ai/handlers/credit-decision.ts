@@ -21,7 +21,7 @@ export interface CreditEvalInput {
 	referencesSummary: string;
 }
 
-const CREDIT_MATRIX_PROMPT = `Sos el motor de decisión crediticia de GrameenBot, un sistema de microcréditos en Argentina.
+const CREDIT_MATRIX_PROMPT = `Sos el motor de decisión crediticia de Lendy, un sistema de microcréditos en Argentina.
 
 MATRIZ DE OTORGAMIENTO (vigente abril 2026):
 
@@ -129,7 +129,7 @@ Determiná el segmento, monto, plazo y cuota según la matriz.`
 	);
 	const parsed = JSON.parse(textBlock?.text ?? '{}');
 
-	return {
+	const decision: CreditDecision = {
 		approved: parsed.approved,
 		segment: parsed.segment,
 		amount: parsed.amount,
@@ -138,4 +138,39 @@ Determiná el segmento, monto, plazo y cuota según la matriz.`
 		weeklyPayment: parsed.weekly_payment,
 		reason: parsed.reason
 	};
+
+	assertValidDecision(decision, parsed);
+	return decision;
+}
+
+/**
+ * Guards against LLM drift: wrong field names (e.g. `installments` instead of
+ * `weeks`), fraction-vs-percentage confusion on TNA, non-multiple-of-4 weeks,
+ * or silent `undefined`s that would end up as NaN in the DB.
+ */
+function assertValidDecision(d: CreditDecision, raw: unknown): asserts d is CreditDecision {
+	const bad = (msg: string): never => {
+		throw new Error(`evaluateCredit: ${msg}. Raw LLM output: ${JSON.stringify(raw)}`);
+	};
+
+	if (typeof d.approved !== 'boolean') bad('approved is not a boolean');
+	if (typeof d.reason !== 'string' || !d.reason) bad('reason missing');
+	if (typeof d.segment !== 'string') bad('segment missing');
+
+	if (!d.approved) return;
+
+	for (const [key, val] of [
+		['amount', d.amount],
+		['weeks', d.weeks],
+		['tna', d.tna],
+		['weeklyPayment', d.weeklyPayment]
+	] as const) {
+		if (typeof val !== 'number' || !Number.isFinite(val) || val <= 0) {
+			bad(`${key} must be a positive finite number, got ${val}`);
+		}
+	}
+
+	if (d.weeks % 4 !== 0) bad(`weeks must be multiple of 4, got ${d.weeks}`);
+	// TNA is a percentage (e.g. 120 for 120%). Catch fraction-shaped (0.85) or nonsensical values.
+	if (d.tna < 10 || d.tna > 500) bad(`tna out of plausible range (expected 10–500%), got ${d.tna}`);
 }

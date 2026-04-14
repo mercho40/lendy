@@ -1,15 +1,24 @@
 <script>
 	let { data } = $props();
+
+	// Pass user_id to ElevenLabs so the post-call webhook can match the call
+	// back to the applicant. The widget serializes this via the `vars` URL
+	// param and the ElevenLabs backend exposes it at
+	// data.conversation_initiation_client_data.dynamic_variables.user_id.
+	const dynamicVariables = JSON.stringify({
+		user_id: data.userId,
+		user_name: data.userName
+	});
 </script>
 
 <svelte:head>
-	<title>GrameenBot — Verificación por Voz</title>
+	<title>Lendy — Verificación por Voz</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6 text-white">
 	<div class="max-w-md w-full text-center space-y-6">
 		<div class="space-y-2">
-			<h1 class="text-2xl font-bold">GrameenBot</h1>
+			<h1 class="text-2xl font-bold">Lendy</h1>
 			<p class="text-gray-400">Verificación por voz</p>
 		</div>
 
@@ -27,7 +36,8 @@
 		</div>
 
 		<div class="flex justify-center">
-			<elevenlabs-convai agent-id={data.agentId}></elevenlabs-convai>
+			<elevenlabs-convai agent-id={data.agentId} dynamic-variables={dynamicVariables}
+			></elevenlabs-convai>
 		</div>
 
 		<p class="text-gray-600 text-xs">

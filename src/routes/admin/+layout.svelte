@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { cn } from '$lib/utils';
+	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 
 	let { children } = $props();
 
@@ -8,7 +9,8 @@
 		{ href: '/admin', label: 'Overview' },
 		{ href: '/admin/users', label: 'Usuarios' },
 		{ href: '/admin/references', label: 'Referencias' },
-		{ href: '/admin/loans', label: 'Préstamos' }
+		{ href: '/admin/loans', label: 'Préstamos' },
+		{ href: '/admin/manager', label: 'Manager' }
 	];
 
 	function isActive(href: string) {
@@ -21,7 +23,7 @@
 	<header class="border-b bg-card">
 		<div class="mx-auto flex max-w-7xl items-center gap-8 px-6 py-3">
 			<a href="/admin" class="flex items-center gap-2">
-				<span class="text-lg font-semibold tracking-tight">GrameenBot</span>
+				<span class="text-lg font-semibold tracking-tight">Lendy</span>
 				<span class="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">admin</span>
 			</a>
 			<nav class="flex items-center gap-1">
@@ -39,6 +41,9 @@
 					</a>
 				{/each}
 			</nav>
+			<div class="ml-auto">
+				<ThemeToggle />
+			</div>
 		</div>
 	</header>
 	<main class="mx-auto max-w-7xl px-6 py-8">
