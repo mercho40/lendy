@@ -17,33 +17,20 @@ vi.mock('../handlers/credit-decision', () => ({
 	})
 }));
 
-import { triggerVerification, triggerCreditDecision, triggerPaymentReminder } from '../pipeline';
+import { generateReferenceCode, triggerCreditDecision, triggerPaymentReminder } from '../pipeline';
 import { sendText } from '../../whatsapp';
 import { evaluateCredit } from '../handlers/credit-decision';
 
-describe('Pipeline: triggerVerification', () => {
-	it('sends a message to each reference', async () => {
-		const refs = [
-			{ phone: '+5491100001111', name: 'Juan' },
-			{ phone: '+5491100002222', name: 'María' },
-			{ phone: '+5491100003333' }
-		];
-
-		await triggerVerification(1, 'Carlos', refs);
-
-		expect(sendText).toHaveBeenCalledTimes(3);
-		expect(sendText).toHaveBeenCalledWith('+5491100001111', expect.stringContaining('Juan'));
-		expect(sendText).toHaveBeenCalledWith('+5491100002222', expect.stringContaining('María'));
-		expect(sendText).toHaveBeenCalledWith('+5491100003333', expect.stringContaining('Carlos'));
+describe('Pipeline: generateReferenceCode', () => {
+	it('generates a code with REF- prefix and 4 alphanumeric chars', () => {
+		const code = generateReferenceCode();
+		expect(code).toMatch(/^REF-[A-Z0-9]{4}$/);
 	});
 
-	it('includes the applicant name in the message', async () => {
-		await triggerVerification(1, 'Pedro', [{ phone: '+5491100001111' }]);
-
-		expect(sendText).toHaveBeenCalledWith(
-			'+5491100001111',
-			expect.stringContaining('Pedro')
-		);
+	it('generates unique codes on successive calls', () => {
+		const codes = new Set(Array.from({ length: 20 }, () => generateReferenceCode()));
+		// With 20 calls, we expect at least some variation (extremely unlikely to all collide)
+		expect(codes.size).toBeGreaterThan(1);
 	});
 });
 

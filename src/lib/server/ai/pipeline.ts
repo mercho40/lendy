@@ -15,26 +15,37 @@
 import { sendText } from '../whatsapp';
 import { evaluateCredit } from './handlers/credit-decision';
 
+const ELEVENLABS_AGENT_ID = 'agent_7601kp6cks47ehat26gjm20y2p86';
+
 /**
- * Called when onboarding completes (submit_references tool).
- * Initiates verification by messaging each reference.
+ * Called after onboarding profile is saved, before references.
+ * Sends a voice verification link via WhatsApp.
  */
-export async function triggerVerification(
+export async function triggerVoiceVerification(
 	userId: number,
 	userName: string,
-	references: Array<{ phone: string; name?: string }>
+	userPhone: string,
+	baseUrl: string
 ): Promise<void> {
-	for (const ref of references) {
-		const greeting = ref.name
-			? `Hola ${ref.name}! Soy GrameenBot.`
-			: `Hola! Soy GrameenBot.`;
+	const voiceUrl = `${baseUrl}/voice?user=${userId}&name=${encodeURIComponent(userName)}`;
 
-		await sendText(
-			ref.phone,
-			`${greeting} ${userName} te puso como referencia para un microcrédito. ¿Tenés unos minutos para responder unas preguntas sobre su situación financiera? Es rápido y confidencial.`
-		);
-	}
+	await sendText(
+		userPhone,
+		`Genial ${userName}! Para avanzar con tu solicitud, necesitamos una verificación rápida por voz.\n\n` +
+			`🎙️ Tocá este link y hablá con nuestro asistente (menos de 2 min):\n${voiceUrl}\n\n` +
+			`Cuando termines, seguimos acá por WhatsApp.`
+	);
 }
+
+/**
+ * Generates a unique reference code in REF-XXXX format.
+ */
+export function generateReferenceCode(): string {
+	const chars = crypto.randomUUID().replace(/-/g, '').toUpperCase();
+	return `REF-${chars.slice(0, 4)}`;
+}
+
+// triggerVerification removed — references now write to the bot first using their REF-XXXX code.
 
 /**
  * Called when all references have responded.
