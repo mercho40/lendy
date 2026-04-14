@@ -154,7 +154,22 @@ export async function handleTool(
 	switch (ctx.state) {
 		case 'onboarding': {
 			if (name === 'save_user_profile') {
-				return saveUserProfile(ctx.userId, input as unknown as SaveUserProfileInput);
+				const result = await saveUserProfile(ctx.userId, input as unknown as SaveUserProfileInput);
+				// After saving profile, send voice link directly via WhatsApp
+				// (don't rely on the agent to forward it — it sometimes refuses URLs)
+				try {
+					const { sendText } = await import('./../../whatsapp');
+					const { BASE_URL } = await import('$env/static/private');
+					const name = (input as any).name ?? 'Usuario';
+					const voiceUrl = `${BASE_URL}/voice?user=${ctx.userId}&name=${encodeURIComponent(name)}`;
+					await sendText(
+						ctx.phone,
+						`¡Perfil guardado! Ahora necesitamos una verificación rápida por voz 🎙️\n\n` +
+							`Tocá este link y hablá con nuestra asistente Lucía (menos de 5 min):\n${voiceUrl}\n\n` +
+							`Cuando termines, volvé acá y escribime "listo" para seguir.`
+					);
+				} catch { /* swallow */ }
+				return result;
 			}
 			if (name === 'submit_references') {
 				return submitReferences(ctx.userId);

@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../db';
 import { users, references } from '../../db/schema';
 import { generateReferenceCode } from '../pipeline';
+import { BASE_URL } from '$env/static/private';
 import type { ToolResult, SaveUserProfileInput } from '../types';
 
 export async function saveUserProfile(
@@ -19,7 +20,12 @@ export async function saveUserProfile(
 		})
 		.where(eq(users.id, userId));
 
-	return { ok: true, message: 'Perfil guardado' };
+	const voiceUrl = `${BASE_URL}/voice?user=${userId}&name=${encodeURIComponent(input.name)}`;
+
+	return {
+		ok: true,
+		message: `Perfil guardado. IMPORTANTE: Mandále al usuario este link de verificación por voz: ${voiceUrl} — Decile que hable con Lucía y cuando termine que vuelva y escriba "listo".`
+	};
 }
 
 export async function submitReferences(
