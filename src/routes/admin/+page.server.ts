@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { count, eq, sum } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { users, groups, loans, payments } from '$lib/server/db/schema';
+import { users, references, loans, payments, conversations } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async () => {
 	const [usersTotal] = await db.select({ c: count() }).from(users);
@@ -10,12 +10,35 @@ export const load: PageServerLoad = async () => {
 		.from(users)
 		.where(eq(users.onboardingComplete, true));
 
-	const groupsForming = await db.select({ c: count() }).from(groups).where(eq(groups.status, 'forming'));
-	const groupsActive = await db.select({ c: count() }).from(groups).where(eq(groups.status, 'active'));
-	const groupsDefaulted = await db
+	// Pipeline breakdown: count users per conversation.state
+	const pipelineRows = await db
+		.select({ state: conversations.state, c: count() })
+		.from(conversations)
+		.groupBy(conversations.state);
+	const pipeline = {
+		onboarding: 0,
+		verification: 0,
+		credit_decision: 0,
+		active_loan: 0
+	};
+	for (const r of pipelineRows) pipeline[r.state] = r.c;
+	// Users without a conversation are implicitly in onboarding (default state)
+	const usersWithoutConvo = usersTotal.c - pipelineRows.reduce((s, r) => s + r.c, 0);
+	pipeline.onboarding += usersWithoutConvo;
+
+	const [refsTotal] = await db.select({ c: count() }).from(references);
+	const [refsContacted] = await db
 		.select({ c: count() })
-		.from(groups)
-		.where(eq(groups.status, 'defaulted'));
+		.from(references)
+		.where(eq(references.status, 'contacted'));
+	const [refsResponded] = await db
+		.select({ c: count() })
+		.from(references)
+		.where(eq(references.status, 'responded'));
+	const [refsPositive] = await db
+		.select({ c: count() })
+		.from(references)
+		.where(eq(references.sentiment, 'positive'));
 
 	const loansActive = await db.select({ c: count() }).from(loans).where(eq(loans.status, 'active'));
 	const loansOverdue = await db
@@ -33,10 +56,12 @@ export const load: PageServerLoad = async () => {
 	return {
 		stats: {
 			users: { total: usersTotal.c, onboarded: usersOnboarded.c },
-			groups: {
-				forming: groupsForming[0].c,
-				active: groupsActive[0].c,
-				defaulted: groupsDefaulted[0].c
+			pipeline,
+			references: {
+				total: refsTotal.c,
+				contacted: refsContacted.c,
+				responded: refsResponded.c,
+				positive: refsPositive.c
 			},
 			loans: {
 				active: loansActive[0].c,

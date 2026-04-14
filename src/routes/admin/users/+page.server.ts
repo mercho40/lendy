@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { desc, eq, ne } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { users, groups, loans } from '$lib/server/db/schema';
+import { users, conversations, loans } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async () => {
 	const rows = await db
@@ -11,13 +11,12 @@ export const load: PageServerLoad = async () => {
 			name: users.name,
 			dni: users.dni,
 			onboardingComplete: users.onboardingComplete,
+			trustScore: users.trustScore,
 			createdAt: users.createdAt,
-			groupId: groups.id,
-			groupName: groups.name,
-			groupStatus: groups.status
+			state: conversations.state
 		})
 		.from(users)
-		.leftJoin(groups, eq(users.groupId, groups.id))
+		.leftJoin(conversations, eq(conversations.userId, users.id))
 		.orderBy(desc(users.createdAt));
 
 	const activeLoans = await db
@@ -36,6 +35,10 @@ export const load: PageServerLoad = async () => {
 	for (const l of activeLoans) loanByUser.set(l.userId, l);
 
 	return {
-		users: rows.map((r) => ({ ...r, activeLoan: loanByUser.get(r.id) ?? null }))
+		users: rows.map((r) => ({
+			...r,
+			state: r.state ?? 'onboarding',
+			activeLoan: loanByUser.get(r.id) ?? null
+		}))
 	};
 };

@@ -49,7 +49,7 @@
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>Usuario</Table.Head>
-						<Table.Head>Grupo</Table.Head>
+						<Table.Head class="text-right">Score</Table.Head>
 						<Table.Head class="text-right">Monto</Table.Head>
 						<Table.Head class="text-right">Cuota</Table.Head>
 						<Table.Head>Cuotas</Table.Head>
@@ -64,7 +64,9 @@
 								<div class="font-medium">{l.userName ?? '—'}</div>
 								<div class="font-mono text-xs text-muted-foreground">{l.userPhone ?? ''}</div>
 							</Table.Cell>
-							<Table.Cell>{l.groupName ?? '—'}</Table.Cell>
+							<Table.Cell class="text-right tabular-nums text-muted-foreground">
+								{l.userTrustScore ?? '—'}
+							</Table.Cell>
 							<Table.Cell class="text-right tabular-nums">{pesos(l.amount)}</Table.Cell>
 							<Table.Cell class="text-right tabular-nums">{pesos(l.installmentAmount)}</Table.Cell>
 							<Table.Cell class="tabular-nums">

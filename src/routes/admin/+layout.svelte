@@ -7,7 +7,7 @@
 	const links = [
 		{ href: '/admin', label: 'Overview' },
 		{ href: '/admin/users', label: 'Usuarios' },
-		{ href: '/admin/groups', label: 'Grupos' },
+		{ href: '/admin/references', label: 'Referencias' },
 		{ href: '/admin/loans', label: 'Préstamos' }
 	];
 

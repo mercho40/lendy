@@ -15,9 +15,20 @@ export const loanStatusEnum = pgEnum('loan_status', ['active', 'paid', 'overdue'
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'approved', 'rejected']);
 export const conversationStateEnum = pgEnum('conversation_state', [
 	'onboarding',
-	'group_formation',
-	'active',
-	'payment_pending'
+	'verification',
+	'credit_decision',
+	'active_loan'
+]);
+export const referenceStatusEnum = pgEnum('reference_status', [
+	'pending',
+	'contacted',
+	'responded',
+	'failed'
+]);
+export const referenceSentimentEnum = pgEnum('reference_sentiment', [
+	'positive',
+	'neutral',
+	'negative'
 ]);
 
 // Tables
@@ -30,6 +41,7 @@ export const users = pgTable('users', {
 	occupation: text('occupation'),
 	onboardingComplete: boolean('onboarding_complete').default(false).notNull(),
 	groupId: integer('group_id').references(() => groups.id),
+	trustScore: integer('trust_score'), // 0–100, set by verification agent
 	createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -39,6 +51,22 @@ export const groups = pgTable('groups', {
 	inviteCode: text('invite_code').unique().notNull(),
 	maxMembers: integer('max_members').default(5).notNull(),
 	status: groupStatusEnum('status').default('forming').notNull(),
+	createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+export const references = pgTable('user_references', {
+	id: serial('id').primaryKey(),
+	applicantId: integer('applicant_id')
+		.references(() => users.id, { onDelete: 'cascade' })
+		.notNull(),
+	name: text('name').notNull(),
+	phone: text('phone').notNull(),
+	relationship: text('relationship'),
+	status: referenceStatusEnum('status').default('pending').notNull(),
+	sentiment: referenceSentimentEnum('sentiment'),
+	responseSummary: text('response_summary'),
+	contactedAt: timestamp('contacted_at'),
+	respondedAt: timestamp('responded_at'),
 	createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -76,7 +104,8 @@ export const conversations = pgTable('conversations', {
 	id: serial('id').primaryKey(),
 	userId: integer('user_id')
 		.references(() => users.id)
-		.notNull(),
+		.notNull()
+		.unique(),
 	messages: jsonb('messages').default([]).notNull(),
 	state: conversationStateEnum('state').default('onboarding').notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull()

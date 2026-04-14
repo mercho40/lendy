@@ -5,12 +5,25 @@
 
 	let { data }: { data: PageData } = $props();
 	let s = $derived(data.stats);
+
+	const pipelineLabels: Record<string, string> = {
+		onboarding: 'Onboarding',
+		verification: 'Verificación',
+		credit_decision: 'Decisión',
+		active_loan: 'Préstamo activo'
+	};
+	const pipelineOrder: (keyof typeof s.pipeline)[] = [
+		'onboarding',
+		'verification',
+		'credit_decision',
+		'active_loan'
+	];
 </script>
 
-<div class="space-y-6">
+<div class="space-y-8">
 	<div>
 		<h1 class="text-3xl font-semibold tracking-tight">Dashboard</h1>
-		<p class="text-muted-foreground">Estado general del sistema</p>
+		<p class="text-muted-foreground">Pipeline de crédito y métricas clave</p>
 	</div>
 
 	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -26,14 +39,11 @@
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Description>Grupos</Card.Description>
-				<Card.Title class="text-3xl tabular-nums">
-					{s.groups.forming + s.groups.active + s.groups.defaulted}
-				</Card.Title>
+				<Card.Description>Referencias</Card.Description>
+				<Card.Title class="text-3xl tabular-nums">{s.references.total}</Card.Title>
 			</Card.Header>
 			<Card.Content class="text-xs text-muted-foreground">
-				{s.groups.active} activos · {s.groups.forming} en formación
-				{#if s.groups.defaulted > 0}· {s.groups.defaulted} en default{/if}
+				{s.references.responded} respondieron · {s.references.positive} positivas
 			</Card.Content>
 		</Card.Root>
 
@@ -63,15 +73,31 @@
 		</Card.Root>
 	</div>
 
-	<Card.Root>
-		<Card.Header>
-			<Card.Title>Resumen</Card.Title>
-			<Card.Description>Vista rápida para la demo</Card.Description>
-		</Card.Header>
-		<Card.Content class="text-sm text-muted-foreground">
-			Los usuarios interactúan por WhatsApp con el agente. Se agrupan de a 5,
-			reciben préstamos de $5.000 a $50.000 en 4 cuotas semanales al 5% flat,
-			y pagan por MercadoPago. Usá las pestañas de arriba para ver el detalle.
-		</Card.Content>
-	</Card.Root>
+	<div>
+		<h2 class="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+			Pipeline
+		</h2>
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			{#each pipelineOrder as key, i (key)}
+				<Card.Root>
+					<Card.Header>
+						<Card.Description class="flex items-center gap-2">
+							<span
+								class="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-medium tabular-nums text-muted-foreground"
+								>{i + 1}</span
+							>
+							{pipelineLabels[key]}
+						</Card.Description>
+						<Card.Title class="text-3xl tabular-nums">{s.pipeline[key]}</Card.Title>
+					</Card.Header>
+					<Card.Content class="text-xs text-muted-foreground">
+						{#if key === 'onboarding'}Recolectando datos básicos{/if}
+						{#if key === 'verification'}Consultando referencias{/if}
+						{#if key === 'credit_decision'}Evaluando oferta{/if}
+						{#if key === 'active_loan'}Con préstamo vivo{/if}
+					</Card.Content>
+				</Card.Root>
+			{/each}
+		</div>
+	</div>
 </div>

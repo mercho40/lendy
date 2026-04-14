@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { desc, eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { loans, users, groups } from '$lib/server/db/schema';
+import { loans, users } from '$lib/server/db/schema';
 
 const VALID_STATUSES = ['active', 'overdue', 'paid'] as const;
 type LoanStatus = (typeof VALID_STATUSES)[number];
@@ -24,11 +24,10 @@ export const load: PageServerLoad = async ({ url }) => {
 			createdAt: loans.createdAt,
 			userName: users.name,
 			userPhone: users.phone,
-			groupName: groups.name
+			userTrustScore: users.trustScore
 		})
 		.from(loans)
-		.leftJoin(users, eq(loans.userId, users.id))
-		.leftJoin(groups, eq(loans.groupId, groups.id));
+		.leftJoin(users, eq(loans.userId, users.id));
 
 	const rows = filterStatus
 		? await base.where(eq(loans.status, filterStatus)).orderBy(desc(loans.createdAt))
