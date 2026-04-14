@@ -5,16 +5,41 @@ vi.mock('../../whatsapp', () => ({
 	sendText: vi.fn().mockResolvedValue(undefined)
 }));
 
-// Mock credit decision
+// Mock credit decision — shape must match the CreditDecision contract
+// (weeks/tna/weeklyPayment, not installments/interestRate).
 vi.mock('../handlers/credit-decision', () => ({
 	evaluateCredit: vi.fn().mockResolvedValue({
 		approved: true,
+		segment: 'premium',
 		amount: 20000,
-		installments: 4,
-		interestRate: 500,
+		weeks: 4,
+		tna: 70,
 		weeklyPayment: 5250,
 		reason: 'Buen perfil crediticio'
 	})
+}));
+
+const mockDbInsert = vi.fn((..._args: unknown[]) => ({
+	values: vi.fn().mockResolvedValue(undefined)
+}));
+const mockDbUpdate = vi.fn((..._args: unknown[]) => ({
+	set: vi.fn(() => ({ where: vi.fn().mockResolvedValue(undefined) }))
+}));
+
+vi.mock('../../db', () => ({
+	db: {
+		insert: (...args: unknown[]) => mockDbInsert(...args),
+		update: (...args: unknown[]) => mockDbUpdate(...args)
+	}
+}));
+
+vi.mock('../../db/schema', () => ({
+	loans: { id: 'loans.id' },
+	conversations: { id: 'conversations.id', userId: 'conversations.user_id' }
+}));
+
+vi.mock('drizzle-orm', () => ({
+	eq: (col: unknown, val: unknown) => ({ col, val })
 }));
 
 import { generateReferenceCode, triggerCreditDecision, triggerPaymentReminder } from '../pipeline';

@@ -13,8 +13,9 @@
  */
 
 import { eq } from 'drizzle-orm';
+import { waitUntil } from '@vercel/functions';
 import { sendText } from '../whatsapp';
-import { evaluateCredit } from './handlers/credit-decision';
+import { evaluateCredit, type CreditDecision } from './handlers/credit-decision';
 import { db } from '../db';
 import { conversations, loans } from '../db/schema';
 
@@ -65,7 +66,7 @@ export async function triggerCreditDecision(
 		referencesSummary: string;
 	}
 ): Promise<void> {
-	const decision = await evaluateCredit(userId, userData);
+	const decision: CreditDecision = await evaluateCredit(userId, userData);
 
 	if (decision.approved) {
 		const montoFmt = decision.amount.toLocaleString('es-AR');
@@ -75,6 +76,8 @@ export async function triggerCreditDecision(
 		const amountCents = Math.round(decision.amount * 100);
 		const installmentCents = Math.round(decision.weeklyPayment * 100);
 		const nextDue = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+		// decision.tna is a percentage (e.g. 120 for 120% TNA); store as bps (1% = 100 bps).
+		const interestRateBps = Math.round(decision.tna * 100);
 
 		await db.insert(loans).values({
 			userId,
@@ -82,7 +85,7 @@ export async function triggerCreditDecision(
 			totalInstallments: decision.weeks,
 			installmentsPaid: 0,
 			installmentAmount: installmentCents,
-			interestRate: decision.tna * 100, // basis points
+			interestRate: interestRateBps,
 			status: 'active',
 			nextDueDate: nextDue,
 			terms: decision
@@ -102,17 +105,25 @@ export async function triggerCreditDecision(
 				`El dinero se va a acreditar en tu cuenta en las próximas horas. Te aviso cuando esté listo.`
 		);
 
-		// Simulate disbursement after a short delay
-		setTimeout(async () => {
-			try {
-				await sendText(
-					userPhone,
-					`✅ ¡Listo! Se acreditaron $${montoFmt} en tu cuenta.\n\n` +
-						`Tu primera cuota de $${cuotaFmt} vence el ${nextDue.toLocaleDateString('es-AR')}.\n` +
-						`Cuando quieras pagar escribime "pagar" y te mando el link.`
-				);
-			} catch { /* ignore */ }
-		}, 5000); // 5 seconds for demo effect
+		// Simulate disbursement after a short delay.
+		// waitUntil keeps the Vercel function alive until this resolves — setTimeout
+		// alone doesn't, because Fluid Compute can tear down the instance once the
+		// response is returned.
+		waitUntil(
+			(async () => {
+				await new Promise((r) => setTimeout(r, 5000)); // 5 seconds for demo effect
+				try {
+					await sendText(
+						userPhone,
+						`✅ ¡Listo! Se acreditaron $${montoFmt} en tu cuenta.\n\n` +
+							`Tu primera cuota de $${cuotaFmt} vence el ${nextDue.toLocaleDateString('es-AR')}.\n` +
+							`Cuando quieras pagar escribime "pagar" y te mando el link.`
+					);
+				} catch {
+					/* ignore */
+				}
+			})()
+		);
 	} else {
 		await sendText(
 			userPhone,

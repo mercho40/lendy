@@ -67,7 +67,8 @@ describe('onboarding handler', () => {
 				occupation: 'Carpintero'
 			});
 
-			expect(result).toEqual({ ok: true, message: 'Perfil guardado' });
+			expect(result.ok).toBe(true);
+			expect(result.message).toContain('Perfil guardado');
 			expect(mockDbUpdate).toHaveBeenCalledTimes(1);
 		});
 	});

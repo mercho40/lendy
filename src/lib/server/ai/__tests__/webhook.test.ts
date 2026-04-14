@@ -227,20 +227,78 @@ describe('WhatsApp Webhook', () => {
 		});
 	});
 
+	describe('POST - reference phone gate (I1)', () => {
+		it('does NOT route to agent if the reference already responded', async () => {
+			const refPhone = '+5491166665555';
+			const ref = {
+				id: 1,
+				userId: 42,
+				phone: refPhone,
+				name: 'María',
+				status: 'responded'
+			};
+			const convo = { id: 30, userId: 42, messages: [], state: 'verification' };
+
+			mockSelectLimit.mockResolvedValueOnce([ref]);
+			mockSelectLimit.mockResolvedValueOnce([convo]);
+
+			const req = makeRequest(inboundPayload(refPhone, 'hola de nuevo'));
+			const res = await POST({ request: req } as any);
+
+			expect(res.status).toBe(200);
+			expect(mockRunAgent).not.toHaveBeenCalled();
+			expect(mockSendText).toHaveBeenCalledWith(
+				refPhone,
+				expect.stringContaining('registradas tus respuestas')
+			);
+		});
+
+		it('does NOT route to agent if the applicant is past verification', async () => {
+			const refPhone = '+5491166667777';
+			const ref = {
+				id: 2,
+				userId: 99,
+				phone: refPhone,
+				name: 'Pepe',
+				status: 'contacted'
+			};
+			const convo = { id: 31, userId: 99, messages: [], state: 'active_loan' };
+
+			mockSelectLimit.mockResolvedValueOnce([ref]);
+			mockSelectLimit.mockResolvedValueOnce([convo]);
+
+			const req = makeRequest(inboundPayload(refPhone, '¿y mi crédito?'));
+			const res = await POST({ request: req } as any);
+
+			expect(res.status).toBe(200);
+			expect(mockRunAgent).not.toHaveBeenCalled();
+			expect(mockSendText).toHaveBeenCalledWith(
+				refPhone,
+				expect.stringContaining('registradas tus respuestas')
+			);
+		});
+	});
+
 	describe('POST - reference phone routes to verification', () => {
 		it('routes reference messages to the applicant conversation', async () => {
 			const refPhone = '+5491166665555';
-			const ref = { id: 1, userId: 42, phone: refPhone, name: 'María', verified: false };
+			const ref = {
+				id: 1,
+				userId: 42,
+				phone: refPhone,
+				name: 'María',
+				status: 'contacted'
+			};
 			const convo = {
 				id: 30,
 				userId: 42,
 				messages: [{ role: 'user', content: 'previous msg' }],
-				state: 'onboarding'
+				state: 'verification'
 			};
 
 			// references lookup: found
 			mockSelectLimit.mockResolvedValueOnce([ref]);
-			// conversations lookup for applicant (userId 42): found
+			// conversations lookup for applicant (userId 42) from the gate: found
 			mockSelectLimit.mockResolvedValueOnce([convo]);
 
 			mockRunAgent.mockResolvedValueOnce({
