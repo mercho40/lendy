@@ -1,0 +1,31 @@
+{
+  "name": "grameenbot",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.88.0",
+    "@kapso/whatsapp-cloud-api": "^0.2.1",
+    "@neondatabase/serverless": "^1.0.2",
+    "@sveltejs/adapter-vercel": "^6.3.3",
+    "@sveltejs/kit": "^2.57.1",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "drizzle-orm": "^0.45.2",
+    "mercadopago": "^2.12.0",
+    "svelte": "^5.55.4",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.8"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10"
+  }
+}
