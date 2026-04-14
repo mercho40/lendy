@@ -1,5 +1,6 @@
 import type { RequestHandler } from './$types';
 import { eq } from 'drizzle-orm';
+import { waitUntil } from '@vercel/functions';
 import { db } from '$lib/server/db';
 import { users, loans, payments } from '$lib/server/db/schema';
 import { getPayment } from '$lib/server/mercadopago';
@@ -54,7 +55,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
 			const cuotaPesos = Math.round(loan.installmentAmount / 100).toLocaleString('es-AR');
 
 			const msg = fullyPaid
-				? `¡Listo! Pagaste la última cuota de tu préstamo. ¡Gracias por confiar en GrameenBot! 🙌`
+				? `¡Listo! Pagaste la última cuota de tu préstamo. ¡Gracias por confiar en Lendy! 🙌`
 				: `✅ Recibimos tu pago de la cuota ${newPaid}/${loan.totalInstallments}.\n\n` +
 					`Te quedan ${remaining} cuotas de $${cuotaPesos}.`;
 			try {
@@ -63,19 +64,25 @@ export const POST: RequestHandler = async ({ request, url }) => {
 				/* swallow */
 			}
 
-			// DEMO: After first payment, offer early payment discount after 8 seconds
+			// DEMO: After first payment, offer early payment discount after 8 seconds.
+			// waitUntil keeps the Vercel function alive long enough for the delay.
 			if (newPaid === 1 && !fullyPaid) {
 				const descuento = Math.round(loan.installmentAmount * 0.9 / 100).toLocaleString('es-AR');
-				setTimeout(async () => {
-					try {
-						await sendText(
-							borrower.phone,
-							`💡 ¡Oferta especial!\n\n` +
-								`Si pagás la cuota 2 ahora, te hacemos un 10% de descuento: $${descuento} en vez de $${cuotaPesos}.\n\n` +
-								`¿Querés aprovechar? Escribime "pagar" y te mando el link con el descuento.`
-						);
-					} catch { /* swallow */ }
-				}, 8000);
+				waitUntil(
+					(async () => {
+						await new Promise((r) => setTimeout(r, 8000));
+						try {
+							await sendText(
+								borrower.phone,
+								`💡 ¡Oferta especial!\n\n` +
+									`Si pagás la cuota 2 ahora, te hacemos un 10% de descuento: $${descuento} en vez de $${cuotaPesos}.\n\n` +
+									`¿Querés aprovechar? Escribime "pagar" y te mando el link con el descuento.`
+							);
+						} catch {
+							/* swallow */
+						}
+					})()
+				);
 			}
 		} else if (status === 'rejected') {
 			await db

@@ -1,4 +1,4 @@
-# Grameen Bank Digital — Hackathon MVP
+# Lendy — Hackathon MVP
 
 ## Context
 Repo está vacío (solo `README.md`). Greenfield. Objetivo: MVP demoable en ~2–3 horas de un "Grameen Bank digitalizado": agente WhatsApp que hace onboarding, arma grupos de 5 personas co-responsables, otorga microcréditos, cobra por MercadoPago y usa presión social grupal para repago. Admin dashboard para ver el estado durante la demo.

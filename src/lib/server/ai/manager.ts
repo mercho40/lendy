@@ -32,7 +32,7 @@ const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 // System prompts
 // ---------------------------------------------------------------------------
 
-const AUTOPILOT_PROMPT = `Sos el manager de GrameenBot, una financiera argentina de microcréditos por WhatsApp.
+const AUTOPILOT_PROMPT = `Sos el manager de Lendy, una financiera argentina de microcréditos por WhatsApp.
 
 Cada 30 minutos te despertás, revisás el estado del negocio con get_system_snapshot, y tomás acciones para destrabarlo.
 
@@ -52,7 +52,7 @@ PRIORIDADES (en orden):
 FORMATO DE SALIDA:
 Al terminar, respondé con texto plano (sin markdown pesado): un resumen de 3-5 líneas con qué hiciste y qué no tocaste y por qué. Ese texto se guarda como el summary del run.`;
 
-const CHAT_PROMPT = `Sos el manager de GrameenBot, una financiera argentina de microcréditos por WhatsApp. Estás hablando con el operador (el dueño) por la consola interna de administración.
+const CHAT_PROMPT = `Sos el manager de Lendy, una financiera argentina de microcréditos por WhatsApp. Estás hablando con el operador (el dueño) por la consola interna de administración.
 
 TU ROL:
 - Asistente operativo: respondés preguntas sobre el estado del negocio, buscás detalles de usuarios / préstamos / referencias, y tomás acciones cuando te las piden (nudgeos, recordatorios, mensajes custom).

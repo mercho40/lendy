@@ -1,90 +1,85 @@
-# GrameenBot - Microfinanzas Digitales via WhatsApp
+# Lendy — Microfinanzas Digitales via WhatsApp
 
-Grameen Bank digitalizado. Un agente de WhatsApp que gestiona microcréditos con presión social grupal.
+Financiera de microcréditos operada por IA. Los usuarios hablan con un bot de WhatsApp que hace onboarding, verifica identidad por voz y con 3 referencias cercanas, decide y emite el crédito, y cobra cuotas semanales por MercadoPago.
 
-## Concepto
+## Pipeline
 
-Los usuarios hablan con un bot de WhatsApp que:
-1. **Onboarding** - Conoce al usuario, recolecta datos básicos conversacionalmente
-2. **Formación de grupos** - Grupos de 5 personas co-responsables (modelo Grameen)
-3. **Préstamos** - Microcréditos de $5.000-$50.000 ARS en 4 cuotas semanales
-4. **Pagos** - Via MercadoPago (link de pago, CBU, alias)
-5. **Presión social** - Si un miembro no paga, el grupo es notificado
+1. **Onboarding** — datos básicos vía chat (nombre, DNI, ingreso, ocupación) + verificación por voz (ElevenLabs).
+2. **Verificación social** — el aplicante comparte 3 códigos `REF-XXXX` con contactos; al escribir al bot con ese código, un agente les hace 4 preguntas cortas y computa un score por referencia.
+3. **Decisión crediticia** — evalúa perfil + `trust_score` promedio y ofrece monto + plazo + TNA.
+4. **Préstamo activo** — cuotas semanales, links de pago MercadoPago, recordatorios por cron, renegociación a demanda.
+5. **Manager** — meta-agente que cada 30 min revisa el pipeline y destraba situaciones (nudges a trabados, recordatorios de mora). Tiene además una consola de chat en `/admin/manager` para el operador.
 
 ## Stack
 
 | Componente | Tecnología |
 |-----------|------------|
 | Runtime | Bun |
-| Framework | SvelteKit |
+| Framework | SvelteKit + Tailwind + shadcn-svelte |
 | WhatsApp | [Kapso.ai](https://kapso.ai) |
-| AI Agent | Claude API (Anthropic) |
-| Database | Postgres (Neon.tech) + Drizzle ORM |
-| Pagos | MercadoPago SDK |
-| Deploy | Vercel |
+| Voz | ElevenLabs Agents |
+| LLM | Claude Sonnet 4.6 (Anthropic) |
+| DB | Postgres en Neon.tech + Drizzle ORM |
+| Pagos | MercadoPago SDK (mockeado en dev vía `/mock-pay/[id]`) |
+| Cron + deploy | Vercel |
 
 ## Setup
 
 ```bash
-# Instalar dependencias
 bun install
-
-# Copiar variables de entorno
 cp .env.example .env
-# Completar las variables en .env
-
-# Push schema a la DB
+# completar variables
 bun run db:push
-
-# Dev server
 bun run dev
 ```
 
-## Variables de Entorno
+## Env vars
 
-Ver `.env.example` para todas las variables necesarias:
-- `DATABASE_URL` - Postgres connection string (Neon.tech)
-- `KAPSO_API_KEY` - API key de Kapso.ai
-- `ANTHROPIC_API_KEY` - API key de Anthropic (Claude)
-- `MP_ACCESS_TOKEN` - Access token de MercadoPago
-- `BASE_URL` - URL pública (ngrok para dev)
+Ver `.env.example`. Críticas:
+- `DATABASE_URL` (Neon)
+- `ANTHROPIC_API_KEY`
+- `KAPSO_API_KEY`, `KAPSO_API_BASE_URL`, `KAPSO_PHONE_NUMBER_ID`, `KAPSO_VERIFY_TOKEN`
+- `BASE_URL` (ngrok en dev, URL de Vercel en prod)
+- `CRON_SECRET` (para auth de los cron endpoints)
 
 ## Estructura
 
 ```
 src/
 ├── lib/server/
-│   ├── db/          # Schema + Drizzle client
-│   ├── ai/          # Claude agent (system prompt, tools, loop)
-│   ├── whatsapp.ts  # Kapso client
-│   └── mercadopago.ts
-├── routes/
-│   ├── api/
-│   │   ├── whatsapp/        # Webhook WhatsApp
-│   │   └── payments/webhook # Webhook MercadoPago
-│   └── admin/               # Dashboard admin
-│       ├── users/
-│       ├── groups/
-│       └── loans/
+│   ├── db/                # schema + drizzle
+│   ├── ai/
+│   │   ├── agent.ts                  # loop user-facing
+│   │   ├── manager.ts                # autopilot + chat del manager
+│   │   ├── pipeline.ts               # orquestador (verificación, decisión, recordatorios)
+│   │   ├── system-prompt.ts          # prompts por estado de conversación
+│   │   ├── tools.ts
+│   │   └── handlers/{onboarding,verification,credit-decision,active-loan}.ts
+│   ├── whatsapp.ts        # cliente Kapso
+│   └── mercadopago.ts     # mock MP
+└── routes/
+    ├── api/
+    │   ├── whatsapp/             # webhook principal
+    │   ├── payments/webhook/     # IPN MercadoPago (mock-compat)
+    │   ├── elevenlabs/webhook/   # resultado de la verificación por voz
+    │   └── cron/
+    │       ├── reminders/        # cron de cobranza (daily)
+    │       └── manager/          # cron del manager (cada 30 min)
+    ├── mock-pay/[paymentId]/     # checkout falso de MP para demo
+    ├── voice/                    # widget ElevenLabs
+    └── admin/                    # dashboard
+        ├── users/[id]
+        ├── references/[id]
+        ├── loans/[id]
+        └── manager/              # chat con el manager + audit de runs/acciones
 ```
-
-## Plan de Implementación
-
-Ver [`docs/plan.md`](docs/plan.md) para el plan completo con fases, schema, y arquitectura del agente.
-
-## Desarrollo
-
-El proyecto está dividido en fases parallelizables:
-
-- **Backend/Agent** (Fases 1-4): WhatsApp webhook → Claude agent → MercadoPago
-- **Frontend/Dashboard** (Fase 5): Admin pages con stats y tablas
 
 ## Scripts
 
 ```bash
-bun run dev          # Dev server
-bun run build        # Build para producción
-bun run db:push      # Push schema a Neon
-bun run db:studio    # Drizzle Studio (explorar DB)
-bun run db:generate  # Generar migrations
+bun run dev          # Vite dev
+bun run build        # build para Vercel
+bun run db:push      # sync schema → Neon
+bun run db:studio    # explorar DB
+bun run test         # vitest
 ```
