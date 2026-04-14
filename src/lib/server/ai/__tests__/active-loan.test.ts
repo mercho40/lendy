@@ -104,7 +104,7 @@ describe('Active Loan Handler', () => {
 			expect(result.payment_link).toBe('https://mp.com/pay/123');
 		});
 
-		it('falls back to mock link when MercadoPago fails', async () => {
+		it('returns error when MercadoPago fails', async () => {
 			const fakePayment = { id: 55, loanId: 10, amount: 262500, status: 'pending' };
 			const deps: Deps = {
 				db: createMockDb({
@@ -114,15 +114,7 @@ describe('Active Loan Handler', () => {
 				createPaymentPreference: () => Promise.reject(new Error('MP not configured'))
 			};
 
-			const result = (await generatePaymentLink(
-				{ loan_id: 10 },
-				ctx,
-				deps
-			)) as Record<string, unknown>;
-
-			expect(result.ok).toBe(true);
-			expect(result.payment_id).toBe(55);
-			expect((result.payment_link as string).includes('mock')).toBe(true);
+			await expect(generatePaymentLink({ loan_id: 10 }, ctx, deps)).rejects.toThrow('MP not configured');
 		});
 	});
 

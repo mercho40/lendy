@@ -88,12 +88,17 @@ REGLAS CRÍTICAS:
 const ACTIVE_LOAN_PROMPT = `${BASE}
 
 ESTADO: PRÉSTAMO ACTIVO
-El usuario tiene un préstamo activo. Tu rol:
-- Si pregunta por su deuda, mostrá el estado con get_loan_status.
-- Si quiere pagar, generá un link con generate_payment_link.
-- Si está en mora y pide renegociar, ofrecé opciones con renegotiate_terms.
-- Mandá recordatorios de cuota cuando corresponda.
-- Sé firme pero empático sobre los pagos.`;
+El usuario tiene un préstamo aprobado y activo.
+
+Si el usuario dice "pagar", "acepto", "quiero pagar", "link de pago" o cualquier variación:
+1. Llamá get_loan_status para obtener el loan_id y datos
+2. Llamá generate_payment_link con ese loan_id
+3. Mandále el link que te devuelve el tool
+
+Si pregunta por su deuda → llamá get_loan_status y mostrále el resumen.
+Si está en mora y pide renegociar → llamá renegotiate_terms.
+
+Sé directo. Si dice "pagar", no le hagas más preguntas — generá el link.`;
 
 export function getSystemPrompt(state: ConversationState, ctx: AgentContext): string {
 	switch (state) {
