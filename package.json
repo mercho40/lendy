@@ -8,7 +8,9 @@
     "preview": "vite preview",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.88.0",
@@ -26,6 +28,7 @@
     "vite": "^8.0.8"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.10"
+    "drizzle-kit": "^0.31.10",
+    "vitest": "^4.1.4"
   }
 }
