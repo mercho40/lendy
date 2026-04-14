@@ -70,14 +70,14 @@
 		<Card.Header class="flex-row items-center justify-between gap-2 border-b">
 			<div>
 				<Card.Title>Manager</Card.Title>
-				<Card.Description>Consola operativa · chat con el agente gerencial</Card.Description>
+				<Card.Description>Operations console · chat with the manager agent</Card.Description>
 			</div>
 			<div class="flex gap-2">
 				<form method="POST" action="?/runAutopilot" use:enhance>
 					<Button type="submit" size="sm" variant="outline">Run autopilot</Button>
 				</form>
 				<form method="POST" action="?/reset" use:enhance>
-					<Button type="submit" size="sm" variant="ghost">Limpiar</Button>
+					<Button type="submit" size="sm" variant="ghost">Reset</Button>
 				</form>
 			</div>
 		</Card.Header>
@@ -85,10 +85,10 @@
 			{#if data.messages.length === 0}
 				<div class="flex h-full items-center justify-center">
 					<div class="max-w-sm text-center text-sm text-muted-foreground">
-						<p class="font-medium text-foreground">Arrancá una conversación.</p>
+						<p class="font-medium text-foreground">Start a conversation.</p>
 						<p class="mt-2">
-							Ejemplos: "¿cómo venimos?", "¿qué pasa con el user 3?", "mandale un mensaje a Pedro
-							diciendo que le bajamos la cuota".
+							Try: "how are we doing today?", "what's going on with user 3?", "send Pedro a
+							message saying we're lowering his installment".
 						</p>
 					</div>
 				</div>
@@ -141,18 +141,18 @@
 					type="text"
 					name="message"
 					bind:value={input}
-					placeholder="Preguntá o pedile algo al manager…"
+					placeholder="Ask the manager or request an action…"
 					class="flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
 					disabled={sending}
 					autocomplete="off"
 				/>
 				<Button type="submit" size="sm" disabled={sending || !input.trim()}>
-					{sending ? 'Pensando…' : 'Enviar'}
+					{sending ? 'Thinking…' : 'Send'}
 				</Button>
 			</form>
 			{#if form && 'autopilot' in form && form.autopilot}
 				<p class="mt-2 text-xs text-muted-foreground">
-					Autopilot corrió: {form.actions} acciones · {form.summary}
+					Autopilot ran: {form.actions} actions · {form.summary}
 				</p>
 			{/if}
 		</div>
@@ -162,7 +162,7 @@
 	<div class="space-y-4">
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Últimos runs</Card.Title>
+				<Card.Title>Recent runs</Card.Title>
 				<Card.Description>Autopilot + chat</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-2 text-sm">
@@ -173,18 +173,18 @@
 							<span>{formatDate(r.startedAt)}</span>
 						</div>
 						<div class="mt-1 tabular-nums">
-							{r.actionsCount} acciones
+							{r.actionsCount} actions
 						</div>
 					</div>
 				{:else}
-					<p class="text-muted-foreground">Sin runs aún.</p>
+					<p class="text-muted-foreground">No runs yet.</p>
 				{/each}
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Últimas acciones</Card.Title>
+				<Card.Title>Recent actions</Card.Title>
 			</Card.Header>
 			<Card.Content class="space-y-2 text-sm">
 				{#each data.recentActions as a (a.id)}
@@ -196,7 +196,7 @@
 						<div class="mt-1 text-xs">{a.summary}</div>
 					</div>
 				{:else}
-					<p class="text-muted-foreground">Sin acciones aún.</p>
+					<p class="text-muted-foreground">No actions yet.</p>
 				{/each}
 			</Card.Content>
 		</Card.Root>

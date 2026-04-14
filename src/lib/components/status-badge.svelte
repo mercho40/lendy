@@ -30,25 +30,25 @@
 	const labels: Record<string, string> = {
 		// Conversation states
 		onboarding: 'Onboarding',
-		verification: 'Verificación',
-		credit_decision: 'Decisión',
-		active_loan: 'Préstamo activo',
+		verification: 'Verification',
+		credit_decision: 'Decision',
+		active_loan: 'Active loan',
 		// Loans
-		active: 'Activo',
-		paid: 'Pagado',
-		overdue: 'Mora',
-		defaulted: 'En default',
+		active: 'Active',
+		paid: 'Paid',
+		overdue: 'Overdue',
+		defaulted: 'Defaulted',
 		// Payments
-		pending: 'Pendiente',
-		approved: 'Aprobado',
-		rejected: 'Rechazado',
+		pending: 'Pending',
+		approved: 'Approved',
+		rejected: 'Rejected',
 		// References
-		contacted: 'Contactada',
-		responded: 'Respondió',
-		failed: 'Falló',
-		positive: 'Positivo',
-		neutral: 'Neutro',
-		negative: 'Negativo'
+		contacted: 'Contacted',
+		responded: 'Responded',
+		failed: 'Failed',
+		positive: 'Positive',
+		neutral: 'Neutral',
+		negative: 'Negative'
 	};
 
 	const variant = $derived(variants[status] ?? 'outline');

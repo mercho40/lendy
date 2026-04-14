@@ -7,10 +7,10 @@ import { triggerPaymentReminder } from '$lib/server/ai/pipeline';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const id = Number(params.id);
-	if (!Number.isFinite(id)) throw error(400, 'id inválido');
+	if (!Number.isFinite(id)) throw error(400, 'invalid id');
 
 	const [loan] = await db.select().from(loans).where(eq(loans.id, id)).limit(1);
-	if (!loan) throw error(404, 'Préstamo no encontrado');
+	if (!loan) throw error(404, 'Loan not found');
 
 	const [borrower] = await db.select().from(users).where(eq(users.id, loan.userId)).limit(1);
 
@@ -26,10 +26,10 @@ export const load: PageServerLoad = async ({ params }) => {
 export const actions: Actions = {
 	simulateCollection: async ({ params }) => {
 		const loanId = Number(params.id);
-		if (!loanId) return fail(400, { message: 'loanId inválido' });
+		if (!loanId) return fail(400, { message: 'invalid loanId' });
 
 		const [loan] = await db.select().from(loans).where(eq(loans.id, loanId)).limit(1);
-		if (!loan) return fail(404, { message: 'Préstamo no encontrado' });
+		if (!loan) return fail(404, { message: 'Loan not found' });
 
 		const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
 		await db
@@ -51,7 +51,7 @@ export const actions: Actions = {
 			return { success: true, sentTo: borrower.phone };
 		} catch (err) {
 			console.error('triggerPaymentReminder failed', err);
-			return { success: true, sentTo: null, warning: 'WA send falló (revisar Kapso)' };
+			return { success: true, sentTo: null, warning: 'WA send failed (check Kapso)' };
 		}
 	}
 };

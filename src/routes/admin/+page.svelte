@@ -14,9 +14,9 @@
 
 	const pipelineLabels: Record<string, string> = {
 		onboarding: 'Onboarding',
-		verification: 'Verificación',
-		credit_decision: 'Decisión',
-		active_loan: 'Préstamo activo'
+		verification: 'Verification',
+		credit_decision: 'Decision',
+		active_loan: 'Active loan'
 	};
 	const pipelineOrder: Array<keyof typeof s.pipeline> = [
 		'onboarding',
@@ -37,84 +37,84 @@
 <div class="space-y-8">
 	<div>
 		<h1 class="text-3xl font-semibold tracking-tight">Dashboard</h1>
-		<p class="text-muted-foreground">Pipeline de crédito y métricas clave</p>
+		<p class="text-muted-foreground">Credit pipeline and key metrics</p>
 	</div>
 
 	<!-- Top stats -->
 	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		<Card.Root>
 			<Card.Header>
-				<Card.Description>Usuarios</Card.Description>
+				<Card.Description>Users</Card.Description>
 				<Card.Title class="text-3xl tabular-nums">{s.users.total}</Card.Title>
 			</Card.Header>
 			<Card.Content class="text-xs text-muted-foreground">
-				{s.users.onboarded} con onboarding · {pct(s.conversionRate)} llegaron a préstamo
+				{s.users.onboarded} onboarded · {pct(s.conversionRate)} reached a loan
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Description>Referencias</Card.Description>
+				<Card.Description>References</Card.Description>
 				<Card.Title class="text-3xl tabular-nums">{s.references.total}</Card.Title>
 			</Card.Header>
 			<Card.Content class="text-xs text-muted-foreground">
-				{s.references.responded} respondieron ({pct(s.responseRate)}) · {s.references.positive} con score ≥ 70
+				{s.references.responded} responded ({pct(s.responseRate)}) · {s.references.positive} scored ≥ 70
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Description>Préstamos</Card.Description>
+				<Card.Description>Loans</Card.Description>
 				<Card.Title class="text-3xl tabular-nums">{s.loans.total}</Card.Title>
 			</Card.Header>
 			<Card.Content class="text-xs text-muted-foreground">
-				{s.loans.active} activos · {s.loans.paid} pagados
+				{s.loans.active} active · {s.loans.paid} paid
 				{#if s.loans.overdue > 0}
-					· <span class="font-medium text-destructive">{s.loans.overdue} en mora</span>
+					· <span class="font-medium text-destructive">{s.loans.overdue} overdue</span>
 				{/if}
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Description>Prestado total</Card.Description>
+				<Card.Description>Total lent</Card.Description>
 				<Card.Title class="text-3xl tabular-nums">{pesos(s.lentCents)}</Card.Title>
 			</Card.Header>
 			<Card.Content class="text-xs text-muted-foreground">
-				Cobrado {pesos(s.collectedCents)} ({pct(s.collectionRate)})
+				Collected {pesos(s.collectedCents)} ({pct(s.collectionRate)})
 			</Card.Content>
 		</Card.Root>
 	</div>
 
-	<!-- Promedios y ratios -->
+	<!-- Averages and ratios -->
 	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		<Card.Root>
 			<Card.Header>
-				<Card.Description>Trust score promedio</Card.Description>
+				<Card.Description>Avg trust score</Card.Description>
 				<Card.Title class="text-2xl tabular-nums">{s.avgTrustScore ?? '—'}</Card.Title>
 			</Card.Header>
 			<Card.Content class="text-xs text-muted-foreground">
-				Sobre {s.users.total} usuarios
+				Across {s.users.total} users
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Description>Score de referencias</Card.Description>
+				<Card.Description>Avg reference score</Card.Description>
 				<Card.Title class="text-2xl tabular-nums">{s.avgRefScore ?? '—'}</Card.Title>
 			</Card.Header>
 			<Card.Content class="text-xs text-muted-foreground">
-				Promedio de {s.references.total} referencias
+				Across {s.references.total} references
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Description>Préstamo promedio</Card.Description>
+				<Card.Description>Avg loan</Card.Description>
 				<Card.Title class="text-2xl tabular-nums">{pesos(s.avgLoanCents)}</Card.Title>
 			</Card.Header>
 			<Card.Content class="text-xs text-muted-foreground">
-				{s.payments.approved} de {s.payments.total} pagos confirmados
+				{s.payments.approved} of {s.payments.total} payments confirmed
 			</Card.Content>
 		</Card.Root>
 
@@ -128,7 +128,7 @@
 				</Card.Title>
 			</Card.Header>
 			<Card.Content class="text-xs text-muted-foreground">
-				{s.loans.overdue} en mora sobre {s.loans.active + s.loans.overdue} vigentes
+				{s.loans.overdue} overdue out of {s.loans.active + s.loans.overdue} outstanding
 			</Card.Content>
 		</Card.Root>
 	</div>
@@ -152,36 +152,36 @@
 						<Card.Title class="text-3xl tabular-nums">{s.pipeline[key]}</Card.Title>
 					</Card.Header>
 					<Card.Content class="text-xs text-muted-foreground">
-						{#if key === 'onboarding'}Recolectando datos básicos{/if}
-						{#if key === 'verification'}Consultando referencias{/if}
-						{#if key === 'credit_decision'}Evaluando oferta{/if}
-						{#if key === 'active_loan'}Con préstamo vivo{/if}
+						{#if key === 'onboarding'}Collecting basic data{/if}
+						{#if key === 'verification'}Polling references{/if}
+						{#if key === 'credit_decision'}Evaluating offer{/if}
+						{#if key === 'active_loan'}With live loan{/if}
 					</Card.Content>
 				</Card.Root>
 			{/each}
 		</div>
 	</div>
 
-	<!-- Referencias breakdown -->
+	<!-- References breakdown -->
 	<div>
 		<h2 class="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-			Referencias por estado
+			References by status
 		</h2>
 		<div class="grid gap-2 sm:grid-cols-4">
 			<div class="rounded-md border bg-card px-4 py-3">
-				<div class="text-xs text-muted-foreground">Pendientes</div>
+				<div class="text-xs text-muted-foreground">Pending</div>
 				<div class="mt-1 text-2xl font-semibold tabular-nums">{s.references.pending}</div>
 			</div>
 			<div class="rounded-md border bg-card px-4 py-3">
-				<div class="text-xs text-muted-foreground">Contactadas</div>
+				<div class="text-xs text-muted-foreground">Contacted</div>
 				<div class="mt-1 text-2xl font-semibold tabular-nums">{s.references.contacted}</div>
 			</div>
 			<div class="rounded-md border bg-card px-4 py-3">
-				<div class="text-xs text-muted-foreground">Respondieron</div>
+				<div class="text-xs text-muted-foreground">Responded</div>
 				<div class="mt-1 text-2xl font-semibold tabular-nums">{s.references.responded}</div>
 			</div>
 			<div class="rounded-md border bg-card px-4 py-3">
-				<div class="text-xs text-muted-foreground">Fallidas</div>
+				<div class="text-xs text-muted-foreground">Failed</div>
 				<div class={cn('mt-1 text-2xl font-semibold tabular-nums', s.references.failed > 0 && 'text-destructive')}>
 					{s.references.failed}
 				</div>
@@ -189,13 +189,13 @@
 		</div>
 	</div>
 
-	<!-- Actividad reciente -->
+	<!-- Recent activity -->
 	<div class="grid gap-6 lg:grid-cols-3">
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Últimos usuarios</Card.Title>
+				<Card.Title>Recent users</Card.Title>
 				<Card.Description>
-					<a href="/admin/users" class="hover:text-foreground">Ver todos →</a>
+					<a href="/admin/users" class="hover:text-foreground">View all →</a>
 				</Card.Description>
 			</Card.Header>
 			<Card.Content class="p-0">
@@ -222,7 +222,7 @@
 							</Table.Row>
 						{:else}
 							<Table.Row>
-								<Table.Cell class="py-6 text-center text-muted-foreground">Sin datos</Table.Cell>
+								<Table.Cell class="py-6 text-center text-muted-foreground">No data</Table.Cell>
 							</Table.Row>
 						{/each}
 					</Table.Body>
@@ -232,9 +232,9 @@
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Últimos préstamos</Card.Title>
+				<Card.Title>Recent loans</Card.Title>
 				<Card.Description>
-					<a href="/admin/loans" class="hover:text-foreground">Ver todos →</a>
+					<a href="/admin/loans" class="hover:text-foreground">View all →</a>
 				</Card.Description>
 			</Card.Header>
 			<Card.Content class="p-0">
@@ -258,7 +258,7 @@
 							</Table.Row>
 						{:else}
 							<Table.Row>
-								<Table.Cell class="py-6 text-center text-muted-foreground">Sin datos</Table.Cell>
+								<Table.Cell class="py-6 text-center text-muted-foreground">No data</Table.Cell>
 							</Table.Row>
 						{/each}
 					</Table.Body>
@@ -268,8 +268,8 @@
 
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Últimos pagos</Card.Title>
-				<Card.Description>Cuotas procesadas</Card.Description>
+				<Card.Title>Recent payments</Card.Title>
+				<Card.Description>Processed installments</Card.Description>
 			</Card.Header>
 			<Card.Content class="p-0">
 				<Table.Root>
@@ -280,7 +280,7 @@
 								onclick={() => go(`/admin/loans/${p.loanId}`)}
 							>
 								<Table.Cell>
-									<div class="font-medium">Préstamo #{p.loanId}</div>
+									<div class="font-medium">Loan #{p.loanId}</div>
 									<div class="text-xs text-muted-foreground">{formatDate(p.createdAt)}</div>
 								</Table.Cell>
 								<Table.Cell class="text-right">
@@ -290,7 +290,7 @@
 							</Table.Row>
 						{:else}
 							<Table.Row>
-								<Table.Cell class="py-6 text-center text-muted-foreground">Sin datos</Table.Cell>
+								<Table.Cell class="py-6 text-center text-muted-foreground">No data</Table.Cell>
 							</Table.Row>
 						{/each}
 					</Table.Body>

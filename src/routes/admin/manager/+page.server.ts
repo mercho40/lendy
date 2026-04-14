@@ -29,7 +29,7 @@ export const actions: Actions = {
 	send: async ({ request }) => {
 		const form = await request.formData();
 		const text = String(form.get('message') ?? '').trim();
-		if (!text) return fail(400, { message: 'Mensaje vacío' });
+		if (!text) return fail(400, { message: 'Empty message' });
 		try {
 			const result = await runManagerChat(text);
 			return { success: true, reply: result.reply };

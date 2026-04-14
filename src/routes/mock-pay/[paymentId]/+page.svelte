@@ -19,7 +19,7 @@
 
 		<div class="rounded-xl bg-white p-6 shadow-sm">
 			<div class="space-y-1">
-				<p class="text-sm text-slate-500">Total a pagar</p>
+				<p class="text-sm text-slate-500">Amount to pay</p>
 				<p class="text-4xl font-semibold tabular-nums text-slate-900">
 					{pesos(data.payment.amountCents)}
 				</p>
@@ -27,18 +27,18 @@
 
 			<div class="mt-6 space-y-2 border-t pt-4 text-sm">
 				<div class="flex justify-between">
-					<span class="text-slate-500">Pagador</span>
+					<span class="text-slate-500">Payer</span>
 					<span class="font-medium text-slate-900">{data.user.name}</span>
 				</div>
 				<div class="flex justify-between">
-					<span class="text-slate-500">Concepto</span>
+					<span class="text-slate-500">For</span>
 					<span class="text-slate-900">
-						Cuota {data.loan.installmentsPaid + 1}/{data.loan.totalInstallments}
+						Installment {data.loan.installmentsPaid + 1}/{data.loan.totalInstallments}
 					</span>
 				</div>
 				<div class="flex justify-between">
-					<span class="text-slate-500">Método</span>
-					<span class="text-slate-900">Tarjeta terminada en ••4242 (mock)</span>
+					<span class="text-slate-500">Method</span>
+					<span class="text-slate-900">Card ending in ••4242 (mock)</span>
 				</div>
 			</div>
 
@@ -58,7 +58,7 @@
 					disabled={pending !== null}
 					class="w-full rounded-lg bg-sky-500 px-4 py-3 text-base font-semibold text-white transition hover:bg-sky-600 disabled:opacity-60"
 				>
-					{pending === 'approve' ? 'Procesando…' : 'Pagar'}
+					{pending === 'approve' ? 'Processing…' : 'Pay'}
 				</button>
 			</form>
 
@@ -78,13 +78,13 @@
 					disabled={pending !== null}
 					class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 transition hover:border-slate-300 hover:text-slate-900 disabled:opacity-60"
 				>
-					{pending === 'reject' ? 'Procesando…' : 'Simular rechazo'}
+					{pending === 'reject' ? 'Processing…' : 'Simulate rejection'}
 				</button>
 			</form>
 		</div>
 
 		<p class="text-center text-xs text-slate-400">
-			Checkout mockeado para demo — no se procesa ninguna transacción real.
+			Mock checkout for demo — no real transaction is processed.
 		</p>
 	</div>
 </div>

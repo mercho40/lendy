@@ -26,7 +26,7 @@
 
 	function fmtJsonValue(v: unknown): string {
 		if (v === null || v === undefined) return '—';
-		if (typeof v === 'boolean') return v ? 'sí' : 'no';
+		if (typeof v === 'boolean') return v ? 'yes' : 'no';
 		return String(v);
 	}
 
@@ -62,11 +62,11 @@
 <div class="space-y-6">
 	<div>
 		<div class="mb-2 text-sm text-muted-foreground">
-			<a href="/admin/users" class="hover:text-foreground">← Volver a usuarios</a>
+			<a href="/admin/users" class="hover:text-foreground">← Back to users</a>
 		</div>
 		<div class="flex items-start justify-between gap-4">
 			<div>
-				<h1 class="text-3xl font-semibold tracking-tight">{data.user.name ?? 'Sin nombre'}</h1>
+				<h1 class="text-3xl font-semibold tracking-tight">{data.user.name ?? 'No name'}</h1>
 				<p class="mt-1 font-mono text-sm text-muted-foreground">
 					{data.user.phone} · ID #{data.user.id}
 				</p>
@@ -74,19 +74,19 @@
 			<div class="flex items-center gap-2">
 				<StatusBadge status={data.conversation?.state ?? 'onboarding'} />
 				{#if data.user.onboardingComplete}
-					<Badge variant="outline">Onboarding OK</Badge>
+					<Badge variant="outline">Onboarding complete</Badge>
 				{:else}
-					<Badge variant="secondary">Onboarding pendiente</Badge>
+					<Badge variant="secondary">Onboarding pending</Badge>
 				{/if}
 			</div>
 		</div>
 	</div>
 
-	<!-- Perfil -->
+	<!-- Profile -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Perfil</Card.Title>
-			<Card.Description>Datos recolectados durante el onboarding</Card.Description>
+			<Card.Title>Profile</Card.Title>
+			<Card.Description>Data collected during onboarding</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<dl class="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
@@ -99,11 +99,11 @@
 					<dd class="mt-1 font-mono">{data.user.dni ?? '—'}</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Ingreso mensual</dt>
+					<dt class="text-muted-foreground">Monthly income</dt>
 					<dd class="mt-1 tabular-nums">{incomePesos(data.user.monthlyIncome)}</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Ocupación</dt>
+					<dt class="text-muted-foreground">Occupation</dt>
 					<dd class="mt-1">{data.user.occupation ?? '—'}</dd>
 				</div>
 				<div>
@@ -113,20 +113,20 @@
 					</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Alta</dt>
+					<dt class="text-muted-foreground">Registered</dt>
 					<dd class="mt-1">{formatDate(data.user.createdAt)}</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Últ. actividad</dt>
+					<dt class="text-muted-foreground">Last activity</dt>
 					<dd class="mt-1">{formatDate(data.conversation?.updatedAt)}</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Conversación</dt>
+					<dt class="text-muted-foreground">Conversation</dt>
 					<dd class="mt-1 tabular-nums">
 						{#if data.conversation}
 							#{data.conversation.id} · {data.conversation.messages.length} msgs
 						{:else}
-							— sin conversación
+							— no conversation
 						{/if}
 					</dd>
 				</div>
@@ -134,26 +134,26 @@
 		</Card.Content>
 	</Card.Root>
 
-	<!-- Referencias -->
+	<!-- References -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Referencias ({data.references.length})</Card.Title>
+			<Card.Title>References ({data.references.length})</Card.Title>
 			<Card.Description>
-				Contactos que dan fe del perfil financiero — clickear para detalle
+				Contacts vouching for the applicant — click for detail
 			</Card.Description>
 		</Card.Header>
 		<Card.Content class="p-0">
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
-						<Table.Head>Nombre</Table.Head>
-						<Table.Head>Teléfono</Table.Head>
-						<Table.Head>Relación</Table.Head>
-						<Table.Head>Código</Table.Head>
-						<Table.Head>Estado</Table.Head>
+						<Table.Head>Name</Table.Head>
+						<Table.Head>Phone</Table.Head>
+						<Table.Head>Relationship</Table.Head>
+						<Table.Head>Code</Table.Head>
+						<Table.Head>Status</Table.Head>
 						<Table.Head class="text-right">Score</Table.Head>
-						<Table.Head>Respuestas</Table.Head>
-						<Table.Head>Creada</Table.Head>
+						<Table.Head>Responses</Table.Head>
+						<Table.Head>Created</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -195,7 +195,7 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={8} class="py-6 text-center text-muted-foreground">
-								Este usuario todavía no cargó referencias.
+								This user hasn't added references yet.
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -204,25 +204,25 @@
 		</Card.Content>
 	</Card.Root>
 
-	<!-- Préstamos -->
+	<!-- Loans -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Préstamos ({data.loans.length})</Card.Title>
-			<Card.Description>Clickear para ver detalle y pagos</Card.Description>
+			<Card.Title>Loans ({data.loans.length})</Card.Title>
+			<Card.Description>Click to see detail and payments</Card.Description>
 		</Card.Header>
 		<Card.Content class="p-0">
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>ID</Table.Head>
-						<Table.Head class="text-right">Monto</Table.Head>
-						<Table.Head class="text-right">Cuota</Table.Head>
-						<Table.Head>Cuotas</Table.Head>
-						<Table.Head class="text-right">Tasa</Table.Head>
-						<Table.Head>Estado</Table.Head>
-						<Table.Head>Próx. vto.</Table.Head>
-						<Table.Head>Últ. recordatorio</Table.Head>
-						<Table.Head>Alta</Table.Head>
+						<Table.Head class="text-right">Amount</Table.Head>
+						<Table.Head class="text-right">Installment</Table.Head>
+						<Table.Head>Installments</Table.Head>
+						<Table.Head class="text-right">Rate</Table.Head>
+						<Table.Head>Status</Table.Head>
+						<Table.Head>Next due</Table.Head>
+						<Table.Head>Last reminder</Table.Head>
+						<Table.Head>Created</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -261,7 +261,7 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={9} class="py-6 text-center text-muted-foreground">
-								Sin préstamos.
+								No loans.
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -270,23 +270,23 @@
 		</Card.Content>
 	</Card.Root>
 
-	<!-- Pagos -->
+	<!-- Payments -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Pagos ({data.payments.length})</Card.Title>
+			<Card.Title>Payments ({data.payments.length})</Card.Title>
 		</Card.Header>
 		<Card.Content class="p-0">
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>ID</Table.Head>
-						<Table.Head>Préstamo</Table.Head>
-						<Table.Head class="text-right">Monto</Table.Head>
-						<Table.Head>Estado</Table.Head>
+						<Table.Head>Loan</Table.Head>
+						<Table.Head class="text-right">Amount</Table.Head>
+						<Table.Head>Status</Table.Head>
 						<Table.Head>MP preference</Table.Head>
 						<Table.Head>MP payment</Table.Head>
 						<Table.Head>Link</Table.Head>
-						<Table.Head>Fecha</Table.Head>
+						<Table.Head>Date</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -316,7 +316,7 @@
 										target="_blank"
 										rel="noopener"
 									>
-										abrir
+										open
 									</a>
 								{:else}
 									<span class="text-muted-foreground">—</span>
@@ -327,7 +327,7 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={8} class="py-6 text-center text-muted-foreground">
-								Sin pagos.
+								No payments.
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -336,19 +336,19 @@
 		</Card.Content>
 	</Card.Root>
 
-	<!-- Conversación -->
+	<!-- Conversation -->
 	<Card.Root>
 		<Card.Header>
 			<Card.Title>
-				Conversación {data.conversation ? `#${data.conversation.id}` : ''}
+				Conversation {data.conversation ? `#${data.conversation.id}` : ''}
 			</Card.Title>
 			<Card.Description>
 				{#if data.conversation}
-					{data.conversation.messages.length} mensajes · actualizada {formatDate(
+					{data.conversation.messages.length} messages · updated {formatDate(
 						data.conversation.updatedAt
 					)}
 				{:else}
-					Sin conversación iniciada
+					No conversation started
 				{/if}
 			</Card.Description>
 		</Card.Header>
@@ -376,7 +376,7 @@
 				</ol>
 			{:else}
 				<p class="text-sm text-muted-foreground">
-					{data.conversation ? 'Sin mensajes aún.' : 'Este usuario todavía no escribió al bot.'}
+					{data.conversation ? 'No messages yet.' : "This user hasn't written to the bot yet."}
 				</p>
 			{/if}
 		</Card.Content>

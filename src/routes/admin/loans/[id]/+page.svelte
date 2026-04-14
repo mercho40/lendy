@@ -25,11 +25,11 @@
 <div class="space-y-6">
 	<div>
 		<div class="mb-2 text-sm text-muted-foreground">
-			<a href="/admin/loans" class="hover:text-foreground">← Volver a préstamos</a>
+			<a href="/admin/loans" class="hover:text-foreground">← Back to loans</a>
 		</div>
 		<div class="flex items-start justify-between gap-4">
 			<div>
-				<h1 class="text-3xl font-semibold tracking-tight">Préstamo #{data.loan.id}</h1>
+				<h1 class="text-3xl font-semibold tracking-tight">Loan #{data.loan.id}</h1>
 				<p class="mt-1 text-sm text-muted-foreground">
 					{#if data.borrower}
 						<a
@@ -39,7 +39,7 @@
 							{data.borrower.name ?? data.borrower.phone}
 						</a>
 					{:else}
-						(usuario desconocido)
+						(unknown user)
 					{/if}
 				</p>
 			</div>
@@ -58,7 +58,7 @@
 						}}
 					>
 						<Button type="submit" size="sm" variant="outline" disabled={pending}>
-							{pending ? 'Enviando…' : 'Forzar mora'}
+							{pending ? 'Sending…' : 'Force overdue'}
 						</Button>
 					</form>
 				{/if}
@@ -68,30 +68,30 @@
 
 	{#if form && 'success' in form && form.success}
 		<div class="rounded-md border bg-muted/40 px-4 py-3 text-sm">
-			Cobranza disparada{form.sentTo ? ` → WhatsApp a ${form.sentTo}` : ''}.
+			Collection triggered{form.sentTo ? ` → WhatsApp to ${form.sentTo}` : ''}.
 			{#if 'warning' in form && form.warning}
 				<span class="text-destructive">{form.warning}</span>
 			{/if}
 		</div>
 	{/if}
 
-	<!-- Resumen -->
+	<!-- Summary -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Detalle</Card.Title>
+			<Card.Title>Details</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			<dl class="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
 				<div>
-					<dt class="text-muted-foreground">Monto</dt>
+					<dt class="text-muted-foreground">Amount</dt>
 					<dd class="mt-1 text-lg font-semibold tabular-nums">{pesos(data.loan.amount)}</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Cuota</dt>
+					<dt class="text-muted-foreground">Installment</dt>
 					<dd class="mt-1 tabular-nums">{pesos(data.loan.installmentAmount)}</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Progreso</dt>
+					<dt class="text-muted-foreground">Progress</dt>
 					<dd class="mt-1 tabular-nums">
 						{data.loan.installmentsPaid}/{data.loan.totalInstallments}
 						<span class="text-muted-foreground">
@@ -100,19 +100,19 @@
 					</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Tasa</dt>
+					<dt class="text-muted-foreground">Rate</dt>
 					<dd class="mt-1 tabular-nums">{(data.loan.interestRate / 100).toFixed(2)}%</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Próx. vto.</dt>
+					<dt class="text-muted-foreground">Next due</dt>
 					<dd class="mt-1">{formatDate(data.loan.nextDueDate)}</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Últ. recordatorio</dt>
+					<dt class="text-muted-foreground">Last reminder</dt>
 					<dd class="mt-1">{formatDate(data.loan.lastReminderAt)}</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Alta</dt>
+					<dt class="text-muted-foreground">Created</dt>
 					<dd class="mt-1">{formatDate(data.loan.createdAt)}</dd>
 				</div>
 			</dl>
@@ -122,8 +122,8 @@
 	{#if termsEntries(data.loan.terms).length}
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>Términos del crédito</Card.Title>
-				<Card.Description>Output de la decisión crediticia</Card.Description>
+				<Card.Title>Credit terms</Card.Title>
+				<Card.Description>Credit decision output</Card.Description>
 			</Card.Header>
 			<Card.Content>
 				<dl class="space-y-2 text-sm">
@@ -140,19 +140,19 @@
 
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Pagos ({data.payments.length})</Card.Title>
+			<Card.Title>Payments ({data.payments.length})</Card.Title>
 		</Card.Header>
 		<Card.Content class="p-0">
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>ID</Table.Head>
-						<Table.Head class="text-right">Monto</Table.Head>
-						<Table.Head>Estado</Table.Head>
+						<Table.Head class="text-right">Amount</Table.Head>
+						<Table.Head>Status</Table.Head>
 						<Table.Head>MP preference</Table.Head>
 						<Table.Head>MP payment</Table.Head>
 						<Table.Head>Link</Table.Head>
-						<Table.Head>Fecha</Table.Head>
+						<Table.Head>Date</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -175,7 +175,7 @@
 										target="_blank"
 										rel="noopener"
 									>
-										abrir
+										open
 									</a>
 								{:else}
 									<span class="text-muted-foreground">—</span>
@@ -186,7 +186,7 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={7} class="py-6 text-center text-muted-foreground">
-								Sin pagos.
+								No payments.
 							</Table.Cell>
 						</Table.Row>
 					{/each}

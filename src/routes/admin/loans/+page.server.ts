@@ -47,10 +47,10 @@ export const actions: Actions = {
 	simulateCollection: async ({ request }) => {
 		const data = await request.formData();
 		const loanId = Number(data.get('loanId'));
-		if (!loanId) return fail(400, { message: 'loanId requerido' });
+		if (!loanId) return fail(400, { message: 'loanId required' });
 
 		const [loan] = await db.select().from(loans).where(eq(loans.id, loanId)).limit(1);
-		if (!loan) return fail(404, { message: 'Préstamo no encontrado' });
+		if (!loan) return fail(404, { message: 'Loan not found' });
 
 		const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
 		await db
@@ -72,7 +72,7 @@ export const actions: Actions = {
 			return { success: true, sentTo: borrower.phone };
 		} catch (err) {
 			console.error('triggerPaymentReminder failed', err);
-			return { success: true, sentTo: null, warning: 'WA send falló (revisar Kapso)' };
+			return { success: true, sentTo: null, warning: 'WA send failed (check Kapso)' };
 		}
 	}
 };

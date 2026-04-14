@@ -12,5 +12,5 @@ export function pesos(cents: number | null | undefined): string {
 export function formatDate(d: Date | string | null | undefined): string {
 	if (!d) return '—';
 	const date = typeof d === 'string' ? new Date(d) : d;
-	return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+	return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }

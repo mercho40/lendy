@@ -6,10 +6,10 @@ import { users, conversations, references, loans, payments } from '$lib/server/d
 
 export const load: PageServerLoad = async ({ params }) => {
 	const id = Number(params.id);
-	if (!Number.isFinite(id)) throw error(400, 'id inválido');
+	if (!Number.isFinite(id)) throw error(400, 'invalid id');
 
 	const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
-	if (!user) throw error(404, 'Usuario no encontrado');
+	if (!user) throw error(404, 'User not found');
 
 	// Applicant conversation (phone match — las referencias tienen otras conversations
 	// con el mismo user_id pero phone distinto).

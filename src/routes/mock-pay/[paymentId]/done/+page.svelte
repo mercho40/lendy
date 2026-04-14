@@ -20,12 +20,12 @@
 			</svg>
 		</div>
 		<h1 class="mt-4 text-2xl font-semibold text-slate-900">
-			{approved ? 'Pago aprobado' : 'Pago rechazado'}
+			{approved ? 'Payment approved' : 'Payment rejected'}
 		</h1>
 		<p class="mt-2 text-sm text-slate-500">
 			{approved
-				? 'Recibimos tu pago. Ya actualizamos tu cuenta. Podés cerrar esta ventana.'
-				: 'El pago no se pudo procesar. Volvé a intentar desde WhatsApp.'}
+				? 'We received your payment and updated your account. You can close this window.'
+				: "The payment couldn't be processed. Try again from WhatsApp."}
 		</p>
 	</div>
 </div>

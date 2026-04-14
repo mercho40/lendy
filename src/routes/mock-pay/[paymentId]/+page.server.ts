@@ -6,10 +6,10 @@ import { payments, loans, users } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const paymentId = Number(params.paymentId);
-	if (!paymentId) throw error(400, 'paymentId inválido');
+	if (!paymentId) throw error(400, 'invalid paymentId');
 
 	const [pay] = await db.select().from(payments).where(eq(payments.id, paymentId)).limit(1);
-	if (!pay) throw error(404, 'Pago no encontrado');
+	if (!pay) throw error(404, 'Payment not found');
 
 	const [loan] = await db.select().from(loans).where(eq(loans.id, pay.loanId)).limit(1);
 	const [user] = await db.select().from(users).where(eq(users.id, loan.userId)).limit(1);
@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			totalInstallments: loan.totalInstallments
 		},
 		user: {
-			name: user?.name ?? 'Usuario',
+			name: user?.name ?? 'User',
 			phone: user?.phone ?? ''
 		}
 	};

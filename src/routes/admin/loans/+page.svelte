@@ -12,10 +12,10 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	const filters = [
-		{ key: null, label: 'Todos' },
-		{ key: 'active', label: 'Activos' },
-		{ key: 'overdue', label: 'En mora' },
-		{ key: 'paid', label: 'Pagados' }
+		{ key: null, label: 'All' },
+		{ key: 'active', label: 'Active' },
+		{ key: 'overdue', label: 'Overdue' },
+		{ key: 'paid', label: 'Paid' }
 	] as const;
 
 	function hrefFor(key: string | null) {
@@ -32,8 +32,8 @@
 <div class="space-y-6">
 	<div class="flex items-end justify-between gap-4">
 		<div>
-			<h1 class="text-3xl font-semibold tracking-tight">Préstamos</h1>
-			<p class="text-muted-foreground">{data.loans.length} préstamos</p>
+			<h1 class="text-3xl font-semibold tracking-tight">Loans</h1>
+			<p class="text-muted-foreground">{data.loans.length} loans</p>
 		</div>
 		<div class="flex gap-1 rounded-md border bg-card p-1">
 			{#each filters as f (f.key ?? 'all')}
@@ -54,7 +54,7 @@
 
 	{#if form && 'success' in form && form.success}
 		<div class="rounded-md border bg-muted/40 px-4 py-3 text-sm">
-			Cobranza disparada{form.sentTo ? ` → WhatsApp a ${form.sentTo}` : ''}.
+			Collection triggered{form.sentTo ? ` → WhatsApp to ${form.sentTo}` : ''}.
 			{#if 'warning' in form && form.warning}
 				<span class="text-destructive">{form.warning}</span>
 			{/if}
@@ -66,14 +66,14 @@
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
-						<Table.Head>Usuario</Table.Head>
+						<Table.Head>User</Table.Head>
 						<Table.Head class="text-right">Score</Table.Head>
-						<Table.Head class="text-right">Monto</Table.Head>
-						<Table.Head class="text-right">Cuota</Table.Head>
-						<Table.Head>Cuotas</Table.Head>
-						<Table.Head>Estado</Table.Head>
-						<Table.Head>Próx. vto.</Table.Head>
-						<Table.Head class="text-right">Acciones</Table.Head>
+						<Table.Head class="text-right">Amount</Table.Head>
+						<Table.Head class="text-right">Installment</Table.Head>
+						<Table.Head>Installments</Table.Head>
+						<Table.Head>Status</Table.Head>
+						<Table.Head>Next due</Table.Head>
+						<Table.Head class="text-right">Actions</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -127,7 +127,7 @@
 											variant="outline"
 											disabled={pendingId === l.id}
 										>
-											{pendingId === l.id ? 'Enviando…' : 'Forzar mora'}
+											{pendingId === l.id ? 'Sending…' : 'Force overdue'}
 										</Button>
 									</form>
 								{/if}
@@ -136,7 +136,7 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={8} class="text-center text-muted-foreground py-8">
-								No hay préstamos en esta vista.
+								No loans in this view.
 							</Table.Cell>
 						</Table.Row>
 					{/each}

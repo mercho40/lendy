@@ -30,9 +30,9 @@
 
 <div class="space-y-6">
 	<div>
-		<h1 class="text-3xl font-semibold tracking-tight">Referencias</h1>
+		<h1 class="text-3xl font-semibold tracking-tight">References</h1>
 		<p class="text-muted-foreground">
-			Contactos de los aplicantes — {data.references.length} en total
+			Applicant contacts — {data.references.length} total
 		</p>
 	</div>
 
@@ -41,14 +41,14 @@
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
-						<Table.Head>Aplicante</Table.Head>
-						<Table.Head>Referencia</Table.Head>
-						<Table.Head>Teléfono</Table.Head>
-						<Table.Head>Relación</Table.Head>
-						<Table.Head>Estado</Table.Head>
+						<Table.Head>Applicant</Table.Head>
+						<Table.Head>Reference</Table.Head>
+						<Table.Head>Phone</Table.Head>
+						<Table.Head>Relationship</Table.Head>
+						<Table.Head>Status</Table.Head>
 						<Table.Head class="text-right">Score</Table.Head>
-						<Table.Head>Respuestas</Table.Head>
-						<Table.Head>Creada</Table.Head>
+						<Table.Head>Responses</Table.Head>
+						<Table.Head>Created</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -91,7 +91,7 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={8} class="text-center text-muted-foreground py-8">
-								Todavía no hay referencias registradas.
+								No references registered yet.
 							</Table.Cell>
 						</Table.Row>
 					{/each}

@@ -23,8 +23,8 @@
 
 <div class="space-y-6">
 	<div>
-		<h1 class="text-3xl font-semibold tracking-tight">Usuarios</h1>
-		<p class="text-muted-foreground">{data.users.length} registrados</p>
+		<h1 class="text-3xl font-semibold tracking-tight">Users</h1>
+		<p class="text-muted-foreground">{data.users.length} registered</p>
 	</div>
 
 	<Card.Root>
@@ -32,14 +32,14 @@
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
-						<Table.Head>Teléfono</Table.Head>
-						<Table.Head>Nombre</Table.Head>
+						<Table.Head>Phone</Table.Head>
+						<Table.Head>Name</Table.Head>
 						<Table.Head>DNI</Table.Head>
-						<Table.Head>Etapa</Table.Head>
+						<Table.Head>Stage</Table.Head>
 						<Table.Head class="text-right">Score</Table.Head>
 						<Table.Head>Onboarding</Table.Head>
-						<Table.Head>Préstamo activo</Table.Head>
-						<Table.Head>Alta</Table.Head>
+						<Table.Head>Active loan</Table.Head>
+						<Table.Head>Registered</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -65,9 +65,9 @@
 							</Table.Cell>
 							<Table.Cell>
 								{#if u.onboardingComplete}
-									<Badge variant="outline">Completo</Badge>
+									<Badge variant="outline">Complete</Badge>
 								{:else}
-									<Badge variant="secondary">Pendiente</Badge>
+									<Badge variant="secondary">Pending</Badge>
 								{/if}
 							</Table.Cell>
 							<Table.Cell>
@@ -88,7 +88,7 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={8} class="text-center text-muted-foreground py-8">
-								Todavía no hay usuarios.
+								No users yet.
 							</Table.Cell>
 						</Table.Row>
 					{/each}

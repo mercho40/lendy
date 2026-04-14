@@ -6,10 +6,10 @@ import { references, users, conversations } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const id = Number(params.id);
-	if (!Number.isFinite(id)) throw error(400, 'id inválido');
+	if (!Number.isFinite(id)) throw error(400, 'invalid id');
 
 	const [ref] = await db.select().from(references).where(eq(references.id, id)).limit(1);
-	if (!ref) throw error(404, 'Referencia no encontrada');
+	if (!ref) throw error(404, 'Reference not found');
 
 	const [applicant] = await db.select().from(users).where(eq(users.id, ref.userId)).limit(1);
 

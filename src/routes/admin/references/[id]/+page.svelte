@@ -44,14 +44,14 @@
 <div class="space-y-6">
 	<div>
 		<div class="mb-2 text-sm text-muted-foreground">
-			<a href="/admin/references" class="hover:text-foreground">← Volver a referencias</a>
+			<a href="/admin/references" class="hover:text-foreground">← Back to references</a>
 		</div>
 		<div class="flex items-start justify-between gap-4">
 			<div>
 				<h1 class="text-3xl font-semibold tracking-tight">
-					{data.reference.name ?? 'Sin nombre'}
+					{data.reference.name ?? 'No name'}
 				</h1>
-				<p class="mt-1 font-mono text-sm text-muted-foreground">{data.reference.phone ?? '(aún no escribió)'}</p>
+				<p class="mt-1 font-mono text-sm text-muted-foreground">{data.reference.phone ?? "(hasn't written yet)"}</p>
 			</div>
 			<StatusBadge status={data.reference.status} />
 		</div>
@@ -59,9 +59,9 @@
 
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Referencia</Card.Title>
+			<Card.Title>Reference</Card.Title>
 			<Card.Description>
-				Aplicante:
+				Applicant:
 				{#if data.applicant}
 					<a
 						href={`/admin/users/${data.applicant.id}`}
@@ -70,14 +70,14 @@
 						{data.applicant.name ?? data.applicant.phone}
 					</a>
 				{:else}
-					<span class="text-muted-foreground">(desconocido)</span>
+					<span class="text-muted-foreground">(unknown)</span>
 				{/if}
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<dl class="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
 				<div>
-					<dt class="text-muted-foreground">Relación</dt>
+					<dt class="text-muted-foreground">Relationship</dt>
 					<dd class="mt-1">{data.reference.relationship ?? '—'}</dd>
 				</div>
 				<div>
@@ -87,11 +87,11 @@
 					</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Creada</dt>
+					<dt class="text-muted-foreground">Created</dt>
 					<dd class="mt-1">{formatDate(data.reference.createdAt)}</dd>
 				</div>
 				<div>
-					<dt class="text-muted-foreground">Código</dt>
+					<dt class="text-muted-foreground">Code</dt>
 					<dd class="mt-1 font-mono text-xs">{data.reference.referenceCode ?? '—'}</dd>
 				</div>
 			</dl>
@@ -100,8 +100,8 @@
 
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Respuestas</Card.Title>
-			<Card.Description>Lo que la referencia contestó al bot</Card.Description>
+			<Card.Title>Responses</Card.Title>
+			<Card.Description>What the reference replied to the bot</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			{#if responsesEntries(data.reference.responses).length}
@@ -114,18 +114,18 @@
 					{/each}
 				</dl>
 			{:else}
-				<p class="text-sm text-muted-foreground">Todavía no hay respuestas registradas.</p>
+				<p class="text-sm text-muted-foreground">No responses yet.</p>
 			{/if}
 		</Card.Content>
 	</Card.Root>
 
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Conversación ({data.messages.length})</Card.Title>
+			<Card.Title>Conversation ({data.messages.length})</Card.Title>
 			<Card.Description>
-				Chat entre la referencia y el bot
+				Chat between reference and bot
 				{#if data.convoState}
-					· estado <StatusBadge status={data.convoState} />
+					· state <StatusBadge status={data.convoState} />
 				{/if}
 			</Card.Description>
 		</Card.Header>
@@ -151,7 +151,7 @@
 					{/each}
 				</ol>
 			{:else}
-				<p class="text-sm text-muted-foreground">Sin mensajes aún.</p>
+				<p class="text-sm text-muted-foreground">No messages yet.</p>
 			{/if}
 		</Card.Content>
 	</Card.Root>
