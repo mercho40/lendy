@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { goto } from '$app/navigation';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
@@ -13,6 +14,10 @@
 		if (s >= 70) return 'text-foreground';
 		if (s >= 40) return 'text-foreground';
 		return 'text-destructive';
+	}
+
+	function openUser(id: number) {
+		goto(`/admin/users/${id}`);
 	}
 </script>
 
@@ -39,7 +44,18 @@
 				</Table.Header>
 				<Table.Body>
 					{#each data.users as u (u.id)}
-						<Table.Row>
+						<Table.Row
+							class="cursor-pointer transition-colors hover:bg-muted/60"
+							onclick={() => openUser(u.id)}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									openUser(u.id);
+								}
+							}}
+							tabindex={0}
+							role="link"
+						>
 							<Table.Cell class="font-mono text-xs">{u.phone}</Table.Cell>
 							<Table.Cell class="font-medium">{u.name ?? '—'}</Table.Cell>
 							<Table.Cell class="font-mono text-xs text-muted-foreground">{u.dni ?? '—'}</Table.Cell>

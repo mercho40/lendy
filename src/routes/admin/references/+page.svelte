@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { goto } from '$app/navigation';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
 	import StatusBadge from '$lib/components/status-badge.svelte';
@@ -7,6 +8,10 @@
 	import { formatDate } from '$lib/format';
 
 	let { data }: { data: PageData } = $props();
+
+	function openRef(id: number) {
+		goto(`/admin/references/${id}`);
+	}
 
 	function scoreClass(s: number | null): string {
 		if (s === null) return 'text-muted-foreground';
@@ -50,8 +55,18 @@
 					{#each data.references as r (r.id)}
 						<Table.Row
 							class={cn(
+								'cursor-pointer transition-colors hover:bg-muted/60',
 								r.score !== null && r.score < 40 && 'bg-destructive/5 hover:bg-destructive/10'
 							)}
+							onclick={() => openRef(r.id)}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									openRef(r.id);
+								}
+							}}
+							tabindex={0}
+							role="link"
 						>
 							<Table.Cell>
 								<div class="font-medium">{r.applicantName ?? '—'}</div>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
 	import { Button } from '$lib/components/ui/button';
@@ -19,6 +20,10 @@
 
 	function hrefFor(key: string | null) {
 		return key ? `/admin/loans?status=${key}` : '/admin/loans';
+	}
+
+	function openLoan(id: number) {
+		goto(`/admin/loans/${id}`);
 	}
 
 	let pendingId = $state<number | null>(null);
@@ -73,7 +78,21 @@
 				</Table.Header>
 				<Table.Body>
 					{#each data.loans as l (l.id)}
-						<Table.Row class={cn(l.status === 'overdue' && 'bg-destructive/5 hover:bg-destructive/10')}>
+						<Table.Row
+							class={cn(
+								'cursor-pointer transition-colors hover:bg-muted/60',
+								l.status === 'overdue' && 'bg-destructive/5 hover:bg-destructive/10'
+							)}
+							onclick={() => openLoan(l.id)}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									openLoan(l.id);
+								}
+							}}
+							tabindex={0}
+							role="link"
+						>
 							<Table.Cell>
 								<div class="font-medium">{l.userName ?? '—'}</div>
 								<div class="font-mono text-xs text-muted-foreground">{l.userPhone ?? ''}</div>
@@ -88,7 +107,7 @@
 							</Table.Cell>
 							<Table.Cell><StatusBadge status={l.status} /></Table.Cell>
 							<Table.Cell class="text-muted-foreground">{formatDate(l.nextDueDate)}</Table.Cell>
-							<Table.Cell class="text-right">
+							<Table.Cell class="text-right" onclick={(e) => e.stopPropagation()}>
 								{#if l.status !== 'paid'}
 									<form
 										method="POST"
