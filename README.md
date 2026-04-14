@@ -2,6 +2,9 @@
 
 **An AI-native microcredit lender, operated end-to-end by autonomous agents.**
 
+🚀 **Live demo:** [https://lendy-nu.vercel.app](https://lendy-nu.vercel.app)
+(Operator console: [`/admin`](https://lendy-nu.vercel.app/admin) · Manager chat: [`/admin/manager`](https://lendy-nu.vercel.app/admin/manager))
+
 Lendy is the first microfinance company where no human touches the credit process. Six AI agents handle onboarding, identity verification, social vouching, underwriting, disbursement, collections, and operations — all via WhatsApp. A four-person team can run the company at the scale of millions of customers.
 
 The point is not the chatbot. The point is **who gets to borrow**.
