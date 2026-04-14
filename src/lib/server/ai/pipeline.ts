@@ -15,6 +15,28 @@
 import { sendText } from '../whatsapp';
 import { evaluateCredit } from './handlers/credit-decision';
 
+const ELEVENLABS_AGENT_ID = 'agent_7601kp6cks47ehat26gjm20y2p86';
+
+/**
+ * Called after onboarding profile is saved, before references.
+ * Sends a voice verification link via WhatsApp.
+ */
+export async function triggerVoiceVerification(
+	userId: number,
+	userName: string,
+	userPhone: string,
+	baseUrl: string
+): Promise<void> {
+	const voiceUrl = `${baseUrl}/voice?user=${userId}&name=${encodeURIComponent(userName)}`;
+
+	await sendText(
+		userPhone,
+		`Genial ${userName}! Para avanzar con tu solicitud, necesitamos una verificación rápida por voz.\n\n` +
+			`🎙️ Tocá este link y hablá con nuestro asistente (menos de 2 min):\n${voiceUrl}\n\n` +
+			`Cuando termines, seguimos acá por WhatsApp.`
+	);
+}
+
 /**
  * Called when onboarding completes (submit_references tool).
  * Initiates verification by messaging each reference.
