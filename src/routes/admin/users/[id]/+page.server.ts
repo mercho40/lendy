@@ -40,14 +40,20 @@ export const load: PageServerLoad = async ({ params }) => {
 				.orderBy(desc(payments.createdAt))
 		: [];
 
-	const messageCount = Array.isArray(applicantConvo?.messages)
-		? (applicantConvo!.messages as unknown[]).length
-		: 0;
+	const messages = Array.isArray(applicantConvo?.messages)
+		? (applicantConvo!.messages as unknown[])
+		: [];
 
 	return {
 		user,
-		state: applicantConvo?.state ?? 'onboarding',
-		messageCount,
+		conversation: applicantConvo
+			? {
+					id: applicantConvo.id,
+					state: applicantConvo.state,
+					updatedAt: applicantConvo.updatedAt,
+					messages
+				}
+			: null,
 		references: refs,
 		loans: userLoans,
 		payments: userPayments
