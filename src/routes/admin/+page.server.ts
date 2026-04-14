@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { count, eq, gte, sum } from 'drizzle-orm';
+import { and, count, eq, gte, sum } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { users, references, loans, payments, conversations } from '$lib/server/db/schema';
 
@@ -10,10 +10,15 @@ export const load: PageServerLoad = async () => {
 		.from(users)
 		.where(eq(users.onboardingComplete, true));
 
-	// Pipeline breakdown: count users per conversation.state
+	// Pipeline breakdown: count applicants (not reference conversations) per state.
+	// La conversación del aplicante es la única con conversations.phone = users.phone.
 	const pipelineRows = await db
 		.select({ state: conversations.state, c: count() })
 		.from(conversations)
+		.innerJoin(
+			users,
+			and(eq(users.id, conversations.userId), eq(users.phone, conversations.phone))
+		)
 		.groupBy(conversations.state);
 	const pipeline = {
 		onboarding: 0,
