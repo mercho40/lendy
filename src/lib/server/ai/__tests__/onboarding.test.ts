@@ -2,17 +2,17 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 
 // --- Mocks ---
 
-const mockDbUpdate = vi.fn(() => ({
+const mockDbUpdate = vi.fn((..._args: unknown[]) => ({
 	set: vi.fn(() => ({
 		where: vi.fn(() => Promise.resolve())
 	}))
 }));
 
-const mockDbInsert = vi.fn(() => ({
+const mockDbInsert = vi.fn((..._args: unknown[]) => ({
 	values: vi.fn(() => Promise.resolve())
 }));
 
-const mockTriggerVerification = vi.fn(() => Promise.resolve());
+const mockTriggerVerification = vi.fn((..._args: unknown[]) => Promise.resolve());
 
 vi.mock('../../db', () => ({
 	db: {

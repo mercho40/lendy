@@ -171,10 +171,13 @@ describe('WhatsApp Webhook', () => {
 			const res = await POST({ request: req } as any);
 
 			expect(res.status).toBe(200);
-			expect(mockRunAgent).toHaveBeenCalledWith(5, expect.arrayContaining([
-				{ role: 'user', content: 'hola' },
-				{ role: 'user', content: 'Quiero pagar' }
-			]));
+			expect(mockRunAgent).toHaveBeenCalledWith(
+				expect.arrayContaining([
+					{ role: 'user', content: 'hola' },
+					{ role: 'user', content: 'Quiero pagar' }
+				]),
+				expect.objectContaining({ userId: 5, phone })
+			);
 			expect(mockSendText).toHaveBeenCalledWith(phone, 'Hola Juan!');
 		});
 	});
@@ -256,10 +259,13 @@ describe('WhatsApp Webhook', () => {
 
 			expect(res.status).toBe(200);
 
-			// Agent should be called with the applicant's userId
-			expect(mockRunAgent).toHaveBeenCalledWith(42, expect.arrayContaining([
-				{ role: 'user', content: '[REFERENCIA María]: Sí, lo conozco' }
-			]));
+			// Agent should be called with the applicant's userId and the reference's phone
+			expect(mockRunAgent).toHaveBeenCalledWith(
+				expect.arrayContaining([
+					{ role: 'user', content: '[REFERENCIA María]: Sí, lo conozco' }
+				]),
+				expect.objectContaining({ userId: 42, phone: refPhone })
+			);
 
 			// Reply goes to the reference's phone
 			expect(mockSendText).toHaveBeenCalledWith(refPhone, 'Gracias María por tu referencia.');
