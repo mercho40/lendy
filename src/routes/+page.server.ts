@@ -8,9 +8,9 @@ const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER_E164}`;
 export const load: PageServerLoad = async () => {
 	const qrSvg = await QRCode.toString(WHATSAPP_URL, {
 		type: 'svg',
-		margin: 1,
+		margin: 2,
 		width: 240,
-		color: { dark: '#0a0a0a', light: '#ffffff00' }
+		color: { dark: '#000000', light: '#ffffff' }
 	});
 	return {
 		whatsappNumber: WHATSAPP_DISPLAY,

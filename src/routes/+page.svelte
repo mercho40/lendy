@@ -100,11 +100,9 @@
 					</div>
 
 					<div
-						class="flex items-center justify-center rounded-xl bg-background p-3 [&_svg]:h-full [&_svg]:w-full"
+						class="mx-auto flex aspect-square w-full max-w-[240px] items-center justify-center rounded-xl bg-white p-3 [&_svg]:h-full [&_svg]:w-full"
 					>
-						<div class="aspect-square w-full max-w-[240px]">
-							{@html data.qrSvg}
-						</div>
+						{@html data.qrSvg}
 					</div>
 
 					<p class="mt-4 text-center text-xs text-muted-foreground">
