@@ -12,12 +12,19 @@ const mockDbInsert = vi.fn((..._args: unknown[]) => ({
 	values: vi.fn(() => Promise.resolve())
 }));
 
-const mockTriggerVerification = vi.fn((..._args: unknown[]) => Promise.resolve());
+const mockDbSelect = vi.fn((..._args: unknown[]) => ({
+	from: vi.fn(() => ({
+		where: vi.fn(() => ({
+			limit: vi.fn(() => []) // no collision on reference codes
+		}))
+	}))
+}));
 
 vi.mock('../../db', () => ({
 	db: {
 		update: (...args: unknown[]) => mockDbUpdate(...args),
-		insert: (...args: unknown[]) => mockDbInsert(...args)
+		insert: (...args: unknown[]) => mockDbInsert(...args),
+		select: (...args: unknown[]) => mockDbSelect(...args)
 	}
 }));
 
@@ -40,7 +47,6 @@ describe('onboarding handler', () => {
 	beforeEach(() => {
 		mockDbUpdate.mockClear();
 		mockDbInsert.mockClear();
-		mockTriggerVerification.mockClear();
 
 		mockDbUpdate.mockImplementation(() => ({
 			set: vi.fn(() => ({
@@ -67,42 +73,35 @@ describe('onboarding handler', () => {
 	});
 
 	describe('submit_references', () => {
-		test('inserts references into the database with reference codes', async () => {
-			const refs = [
-				{ phone: '+5491155551111', name: 'María', relationship: 'amiga' },
-				{ phone: '+5491155552222' }
-			];
+		test('generates 3 reference codes and inserts into DB', async () => {
+			// Mock select for uniqueness check (no existing codes)
+			const mockDbSelect = vi.fn(() => ({
+				from: vi.fn(() => ({
+					where: vi.fn(() => ({
+						limit: vi.fn(() => []) // no collision
+					}))
+				}))
+			}));
 
-			const result = await submitReferences(42, 'Juan Pérez', { references: refs });
+			// Re-mock db with select
+			vi.mocked(mockDbInsert).mockImplementation(() => ({
+				values: vi.fn(() => Promise.resolve())
+			}));
+
+			const result = await submitReferences(42);
 
 			expect(result.ok).toBe(true);
-			expect(mockDbInsert).toHaveBeenCalledTimes(2);
+			expect(result.newState).toBe('verification');
+			expect(result.codes).toHaveLength(3);
+			for (const code of result.codes as string[]) {
+				expect(code).toMatch(/^REF-[A-Z0-9]{4}$/);
+			}
 		});
 
-		test('does not call triggerVerification (removed)', async () => {
-			const refs = [{ phone: '+5491155551111', name: 'María', relationship: 'amiga' }];
-
-			await submitReferences(42, 'Juan Pérez', { references: refs });
-
-			// triggerVerification no longer exists — verify no whatsapp messages are sent from here
-			expect(mockTriggerVerification).not.toHaveBeenCalled();
-		});
-
-		test('message includes reference codes and bot number', async () => {
-			const refs = [{ phone: '+5491155551111', name: 'María' }];
-
-			const result = await submitReferences(42, 'Juan Pérez', { references: refs });
+		test('returns codes in message', async () => {
+			const result = await submitReferences(42);
 
 			expect(result.message).toContain('REF-');
-			expect(result.message).toContain('+1 201-252-0899');
-		});
-
-		test('returns newState verification for state transition', async () => {
-			const refs = [{ phone: '+5491155551111' }];
-
-			const result = await submitReferences(42, 'Juan Pérez', { references: refs });
-
-			expect(result.newState).toBe('verification');
 		});
 	});
 });

@@ -13,8 +13,9 @@ describe('getSystemPrompt', () => {
 		const prompt = getSystemPrompt('onboarding', baseCtx);
 		expect(prompt).toContain('ONBOARDING');
 		expect(prompt).toContain('save_user_profile');
-		expect(prompt).toContain('3 personas');
 		expect(prompt).toContain('submit_references');
+		expect(prompt).toContain('FASE 1');
+		expect(prompt).toContain('FASE 2');
 	});
 
 	it('returns verification prompt for reference conversations', () => {
