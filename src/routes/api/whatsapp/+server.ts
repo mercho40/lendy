@@ -3,7 +3,7 @@ import { KAPSO_VERIFY_TOKEN } from '$env/static/private';
 import { sendText } from '$lib/server/whatsapp';
 import { db } from '$lib/server/db';
 import { users, conversations, references } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, isNotNull } from 'drizzle-orm';
 import { runAgent, type AgentMessage } from '$lib/server/ai/agent';
 
 // GET: Webhook verification (Meta hub.challenge handshake)
@@ -40,7 +40,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		console.log(`[WhatsApp] Received from ${from}: ${text}`);
 
-		// Check if this phone belongs to a reference (not a regular user)
+		// Check if this phone already belongs to a matched reference
 		const [existingRef] = await db
 			.select()
 			.from(references)
@@ -53,14 +53,114 @@ export const POST: RequestHandler = async ({ request }) => {
 			return new Response('ok');
 		}
 
-		// Find or create user by phone number
+		// Check if this phone belongs to an existing user
 		let [user] = await db.select().from(users).where(eq(users.phone, from)).limit(1);
 
 		if (!user) {
+			// New number — check if they're sending a REF-XXXX code
+			const refCodeMatch = text.match(/REF-[A-Z0-9]{4}/i);
+			const refCode = refCodeMatch ? refCodeMatch[0].toUpperCase() : null;
+
+			if (refCode) {
+				// Look up the code in the references table
+				const [pendingRef] = await db
+					.select()
+					.from(references)
+					.where(eq(references.referenceCode, refCode))
+					.limit(1);
+
+				if (!pendingRef) {
+					await sendText(from, 'Ese código no es válido. ¿Podés verificarlo con quien te lo pasó?');
+					return new Response('ok');
+				}
+
+				// Match: assign this phone to the reference record and start verification
+				await db
+					.update(references)
+					.set({ phone: from, status: 'contacted' })
+					.where(eq(references.id, pendingRef.id));
+
+				// Get the applicant's name for the greeting
+				const [applicant] = await db
+					.select()
+					.from(users)
+					.where(eq(users.id, pendingRef.userId))
+					.limit(1);
+				const applicantName = applicant?.name ?? 'alguien';
+
+				// Create a user record for this reference so the conversation is tracked
+				[user] = await db.insert(users).values({ phone: from }).returning();
+
+				// Create a conversation in verification state, seeded with context
+				const [convo] = await db
+					.insert(conversations)
+					.values({
+						userId: pendingRef.userId, // conversation belongs to the applicant
+						phone: from,
+						messages: [],
+						state: 'verification'
+					})
+					.returning();
+
+				// Kick off verification with context pre-loaded
+				const seedMsg: AgentMessage = {
+					role: 'user',
+					content: `[REFERENCIA entró con código ${refCode}. Es referencia de ${applicantName} (user ID ${pendingRef.userId}). Nombre de la referencia: ${pendingRef.name ?? 'desconocido'}. Su primer mensaje: ${text}]`
+				};
+				const msgs: AgentMessage[] = [seedMsg];
+
+				let replyText: string;
+				let updatedMsgs: AgentMessage[];
+
+				try {
+					const result = await runAgent(msgs, {
+						userId: pendingRef.userId,
+						phone: from,
+						state: 'verification'
+					});
+					replyText = result.reply;
+					updatedMsgs = result.messages;
+				} catch (err) {
+					console.error('[WhatsApp] Agent error (new reference):', err);
+					replyText = FALLBACK_MSG;
+					updatedMsgs = msgs;
+				}
+
+				await db
+					.update(conversations)
+					.set({ messages: updatedMsgs, updatedAt: new Date() })
+					.where(eq(conversations.id, convo.id));
+
+				await sendText(from, replyText);
+				return new Response('ok');
+			}
+
+			// No code — new user starting onboarding
 			[user] = await db.insert(users).values({ phone: from }).returning();
+
+			const [convo] = await db
+				.insert(conversations)
+				.values({ userId: user.id, phone: from, messages: [], state: 'onboarding' })
+				.returning();
+
+			// Greet them and ask if they have a reference code or want a loan
+			const welcomeMsg =
+				'¡Hola! Bienvenido/a a GrameenBot 👋\n\n¿Venís por un crédito propio o te pasaron un código de referencia?';
+			await sendText(from, welcomeMsg);
+
+			// Save the welcome as an assistant message so the agent has context
+			await db
+				.update(conversations)
+				.set({
+					messages: [{ role: 'assistant', content: welcomeMsg }],
+					updatedAt: new Date()
+				})
+				.where(eq(conversations.id, convo.id));
+
+			return new Response('ok');
 		}
 
-		// Find or create conversation for this user
+		// Existing user — find or create their conversation
 		let [convo] = await db
 			.select()
 			.from(conversations)

@@ -38,25 +38,14 @@ export async function triggerVoiceVerification(
 }
 
 /**
- * Called when onboarding completes (submit_references tool).
- * Initiates verification by messaging each reference.
+ * Generates a unique reference code in REF-XXXX format.
  */
-export async function triggerVerification(
-	userId: number,
-	userName: string,
-	references: Array<{ phone: string; name?: string }>
-): Promise<void> {
-	for (const ref of references) {
-		const greeting = ref.name
-			? `Hola ${ref.name}! Soy GrameenBot.`
-			: `Hola! Soy GrameenBot.`;
-
-		await sendText(
-			ref.phone,
-			`${greeting} ${userName} te puso como referencia para un microcrédito. ¿Tenés unos minutos para responder unas preguntas sobre su situación financiera? Es rápido y confidencial.`
-		);
-	}
+export function generateReferenceCode(): string {
+	const chars = crypto.randomUUID().replace(/-/g, '').toUpperCase();
+	return `REF-${chars.slice(0, 4)}`;
 }
+
+// triggerVerification removed — references now write to the bot first using their REF-XXXX code.
 
 /**
  * Called when all references have responded.

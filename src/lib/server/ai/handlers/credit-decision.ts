@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { ANTHROPIC_API_KEY } from '$env/static/private';
 
-const client = new Anthropic();
+const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 export interface CreditDecision {
 	approved: boolean;
