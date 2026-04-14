@@ -1,7 +1,9 @@
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
+import { fail } from '@sveltejs/kit';
 import { desc, eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { loans, users } from '$lib/server/db/schema';
+import { triggerPaymentReminder } from '$lib/server/ai/pipeline';
 
 const VALID_STATUSES = ['active', 'overdue', 'paid'] as const;
 type LoanStatus = (typeof VALID_STATUSES)[number];
@@ -37,4 +39,40 @@ export const load: PageServerLoad = async ({ url }) => {
 		loans: rows,
 		filterStatus
 	};
+};
+
+export const actions: Actions = {
+	// Demo helper — fuerza una cuota a estado vencido y dispara el recordatorio
+	// de cobranza por WhatsApp para poder mostrarlo en la demo sin esperar 7 días.
+	simulateCollection: async ({ request }) => {
+		const data = await request.formData();
+		const loanId = Number(data.get('loanId'));
+		if (!loanId) return fail(400, { message: 'loanId requerido' });
+
+		const [loan] = await db.select().from(loans).where(eq(loans.id, loanId)).limit(1);
+		if (!loan) return fail(404, { message: 'Préstamo no encontrado' });
+
+		const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+		await db
+			.update(loans)
+			.set({ status: 'overdue', nextDueDate: yesterday })
+			.where(eq(loans.id, loanId));
+
+		const [borrower] = await db.select().from(users).where(eq(users.id, loan.userId)).limit(1);
+		if (!borrower) return { success: true, sentTo: null };
+
+		try {
+			await triggerPaymentReminder(borrower.phone, borrower.name ?? 'amigo', {
+				installmentNumber: loan.installmentsPaid + 1,
+				totalInstallments: loan.totalInstallments,
+				amount: Math.round(loan.installmentAmount / 100),
+				dueDate: yesterday.toISOString().slice(0, 10),
+				daysUntilDue: -1
+			});
+			return { success: true, sentTo: borrower.phone };
+		} catch (err) {
+			console.error('triggerPaymentReminder failed', err);
+			return { success: true, sentTo: null, warning: 'WA send falló (revisar Kapso)' };
+		}
+	}
 };

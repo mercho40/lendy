@@ -55,39 +55,23 @@ export async function generatePaymentLink(
 		.values({ loanId: loan.id, amount: loan.installmentAmount, status: 'pending' })
 		.returning();
 
-	try {
-		const pref = await deps.createPaymentPreference({
-			loanId: loan.id,
-			paymentId: pay.id,
-			amountPesos: Math.round(loan.installmentAmount / 100),
-			description: `Cuota ${loan.installmentsPaid + 1}/${loan.totalInstallments} - préstamo #${loan.id}`
-		});
-		await deps.db
-			.update(payments)
-			.set({ mpPreferenceId: pref.id, paymentLink: pref.initPoint })
-			.where(eq(payments.id, pay.id));
-		return {
-			ok: true,
-			payment_id: pay.id,
-			payment_link: pref.initPoint,
-			amount_pesos: Math.round(loan.installmentAmount / 100),
-			message: `Link de pago generado: ${pref.initPoint}`
-		};
-	} catch {
-		// MercadoPago not configured — return mock link for demo
-		const mockLink = `https://www.mercadopago.com.ar/checkout/mock/${pay.id}`;
-		await deps.db
-			.update(payments)
-			.set({ paymentLink: mockLink })
-			.where(eq(payments.id, pay.id));
-		return {
-			ok: true,
-			payment_id: pay.id,
-			payment_link: mockLink,
-			amount_pesos: Math.round(loan.installmentAmount / 100),
-			message: `Link de pago (demo): ${mockLink}`
-		};
-	}
+	const pref = await deps.createPaymentPreference({
+		loanId: loan.id,
+		paymentId: pay.id,
+		amountPesos: Math.round(loan.installmentAmount / 100),
+		description: `Cuota ${loan.installmentsPaid + 1}/${loan.totalInstallments} - préstamo #${loan.id}`
+	});
+	await deps.db
+		.update(payments)
+		.set({ mpPreferenceId: pref.id, paymentLink: pref.initPoint })
+		.where(eq(payments.id, pay.id));
+	return {
+		ok: true,
+		payment_id: pay.id,
+		payment_link: pref.initPoint,
+		amount_pesos: Math.round(loan.installmentAmount / 100),
+		message: `Link de pago generado: ${pref.initPoint}`
+	};
 }
 
 export async function renegotiateTerms(

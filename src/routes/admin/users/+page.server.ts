@@ -1,9 +1,12 @@
 import type { PageServerLoad } from './$types';
-import { desc, eq, ne } from 'drizzle-orm';
+import { and, desc, eq, ne } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { users, conversations, loans } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async () => {
+	// Join sólo a la conversación del aplicante (phone = users.phone).
+	// Las conversaciones de referencias comparten user_id pero tienen el phone
+	// de la referencia, y generarían duplicados en la tabla.
 	const rows = await db
 		.select({
 			id: users.id,
@@ -16,7 +19,10 @@ export const load: PageServerLoad = async () => {
 			state: conversations.state
 		})
 		.from(users)
-		.leftJoin(conversations, eq(conversations.userId, users.id))
+		.leftJoin(
+			conversations,
+			and(eq(conversations.userId, users.id), eq(conversations.phone, users.phone))
+		)
 		.orderBy(desc(users.createdAt));
 
 	const activeLoans = await db
