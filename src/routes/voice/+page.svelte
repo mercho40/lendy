@@ -1,9 +1,5 @@
 <script>
-	import { page } from '$app/state';
-
-	const userId = page.url.searchParams.get('user') ?? '';
-	const userName = page.url.searchParams.get('name') ?? 'Usuario';
-	const agentId = 'agent_7601kp6cks47ehat26gjm20y2p86';
+	let { data } = $props();
 </script>
 
 <svelte:head>
@@ -19,7 +15,7 @@
 
 		<div class="bg-gray-800 rounded-2xl p-6 space-y-4">
 			<p class="text-lg">
-				Hola <span class="font-semibold text-green-400">{userName}</span>
+				Hola <span class="font-semibold text-green-400">{data.userName}</span>
 			</p>
 			<p class="text-gray-300 text-sm">
 				Para completar tu solicitud de microcrédito, necesitamos hacerte unas preguntas
@@ -31,7 +27,7 @@
 		</div>
 
 		<div class="flex justify-center">
-			<elevenlabs-convai agent-id={agentId} data-user-id={userId}></elevenlabs-convai>
+			<elevenlabs-convai agent-id={data.agentId}></elevenlabs-convai>
 		</div>
 
 		<p class="text-gray-600 text-xs">
@@ -40,4 +36,3 @@
 	</div>
 </div>
 
-<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async></script>
