@@ -1,12 +1,14 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
+	import { enhance } from '$app/forms';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
+	import { Button } from '$lib/components/ui/button';
 	import StatusBadge from '$lib/components/status-badge.svelte';
 	import { cn } from '$lib/utils';
 	import { pesos, formatDate } from '$lib/format';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	const filters = [
 		{ key: null, label: 'Todos' },
@@ -18,6 +20,8 @@
 	function hrefFor(key: string | null) {
 		return key ? `/admin/loans?status=${key}` : '/admin/loans';
 	}
+
+	let pendingId = $state<number | null>(null);
 </script>
 
 <div class="space-y-6">
@@ -43,6 +47,15 @@
 		</div>
 	</div>
 
+	{#if form && 'success' in form && form.success}
+		<div class="rounded-md border bg-muted/40 px-4 py-3 text-sm">
+			Cobranza disparada{form.sentTo ? ` → WhatsApp a ${form.sentTo}` : ''}.
+			{#if 'warning' in form && form.warning}
+				<span class="text-destructive">{form.warning}</span>
+			{/if}
+		</div>
+	{/if}
+
 	<Card.Root>
 		<Card.Content class="p-0">
 			<Table.Root>
@@ -55,6 +68,7 @@
 						<Table.Head>Cuotas</Table.Head>
 						<Table.Head>Estado</Table.Head>
 						<Table.Head>Próx. vto.</Table.Head>
+						<Table.Head class="text-right">Acciones</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -74,10 +88,35 @@
 							</Table.Cell>
 							<Table.Cell><StatusBadge status={l.status} /></Table.Cell>
 							<Table.Cell class="text-muted-foreground">{formatDate(l.nextDueDate)}</Table.Cell>
+							<Table.Cell class="text-right">
+								{#if l.status !== 'paid'}
+									<form
+										method="POST"
+										action="?/simulateCollection"
+										use:enhance={() => {
+											pendingId = l.id;
+											return async ({ update }) => {
+												await update();
+												pendingId = null;
+											};
+										}}
+									>
+										<input type="hidden" name="loanId" value={l.id} />
+										<Button
+											type="submit"
+											size="sm"
+											variant="outline"
+											disabled={pendingId === l.id}
+										>
+											{pendingId === l.id ? 'Enviando…' : 'Forzar mora'}
+										</Button>
+									</form>
+								{/if}
+							</Table.Cell>
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={7} class="text-center text-muted-foreground py-8">
+							<Table.Cell colspan={8} class="text-center text-muted-foreground py-8">
 								No hay préstamos en esta vista.
 							</Table.Cell>
 						</Table.Row>
