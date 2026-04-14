@@ -65,12 +65,13 @@ export async function triggerCreditDecision(
 	const decision = await evaluateCredit(userId, userData);
 
 	if (decision.approved) {
+		const montoFmt = decision.amount.toLocaleString('es-AR');
+		const cuotaFmt = Math.round(decision.weeklyPayment).toLocaleString('es-AR');
 		await sendText(
 			userPhone,
 			`¡Buenas noticias, ${userData.name}! Tu crédito fue aprobado.\n\n` +
-				`💰 Monto: $${decision.amount}\n` +
-				`📅 ${decision.installments} cuotas semanales de $${decision.weeklyPayment}\n` +
-				`📊 Tasa: ${decision.interestRate / 100}%\n\n` +
+				`💰 Monto: $${montoFmt}\n` +
+				`📅 ${decision.weeks} cuotas semanales de $${cuotaFmt}\n\n` +
 				`¿Querés aceptar? Respondé "acepto" y te mando el link de pago de la primera cuota.`
 		);
 	} else {
